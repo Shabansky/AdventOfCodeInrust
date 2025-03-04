@@ -37,8 +37,6 @@ fn main() {
         floor_at_first_basement: 0,
     };
 
-    asserts(&mut santa_tracer);
-
     let file_path = "floors_input.txt";
 
     match fs::read_to_string(file_path) {
@@ -55,7 +53,13 @@ fn main() {
     }
 }
 
-fn asserts(santa_tracer: &mut SantaFloorTracer) {
+#[test]
+fn test_tracer() {
+    let mut santa_tracer = SantaFloorTracer {
+        floor: 0,
+        floor_at_first_basement: 0,
+    };
+
     assert_eq!(0, santa_tracer.get_floor(&String::from("(())")));
     assert_eq!(0, santa_tracer.get_floor(&String::from("()()")));
     assert_eq!(3, santa_tracer.get_floor(&String::from("(((")));
