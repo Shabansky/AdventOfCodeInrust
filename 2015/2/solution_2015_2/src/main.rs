@@ -8,7 +8,10 @@ struct Box {
 
 impl Box {
     fn from_string(string: String) -> Result<Self, String> {
-        let dimensions_vec = convert_vec_string_to_u32(split_string_by_delim(string));
+        let vec_slice = split_string_by_delim(string, 'x');
+
+        //TODO: There has to be a better way to do this
+        let dimensions_vec = vec_string_to_u32(vec_slice);
 
         if dimensions_vec.is_err() {
             return Err(String::from("Malformed input"));
@@ -54,33 +57,33 @@ fn main() {
     println!("{paper}");
 }
 
-fn split_string_by_delim(input: String) -> Vec<String> {
+fn split_string_by_delim(input: String, delim: char) -> Vec<String> {
     let mut delims: Vec<usize> = vec![];
 
     for (i, v) in input.chars().enumerate() {
-        if v == 'x' {
+        if v == delim {
             delims.push(i);
         }
     }
 
-    let mut last_delim: usize = 0;
+    let mut pointer: usize = 0;
     let mut segments: Vec<String> = vec![];
     for i in delims {
-        let slice = &input[last_delim..i];
+        let slice = &input[pointer..i];
 
         segments.push(String::from(slice));
-        //Skip one char to the right to avoid the "x"
-        last_delim = i + 1;
+        //Skip one char to the right to avoid the delimiter
+        pointer = i + 1;
     }
-    if last_delim < input.len() {
-        let slice = &input[last_delim..input.len()];
+    if pointer < input.len() {
+        let slice = &input[pointer..input.len()];
         segments.push(String::from(slice));
     }
 
     segments
 }
 
-fn convert_vec_string_to_u32(input: Vec<String>) -> Result<Vec<u32>, bool> {
+fn vec_string_to_u32(input: Vec<String>) -> Result<Vec<u32>, bool> {
     let mut result = vec![];
 
     for i in input {
