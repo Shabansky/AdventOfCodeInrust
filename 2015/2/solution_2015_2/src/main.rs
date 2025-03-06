@@ -1,3 +1,5 @@
+use std::fs;
+
 type Feet = u32;
 
 struct Box {
@@ -7,7 +9,7 @@ struct Box {
 }
 
 impl Box {
-    fn from_string(string: String) -> Result<Self, String> {
+    fn from_string(string: &str) -> Result<Self, String> {
         let vec_slice = split_string_by_delim(string, 'x');
 
         //TODO: There has to be a better way to do this
@@ -42,22 +44,33 @@ impl Box {
 }
 
 fn main() {
-    let box1_input = String::from("2x3x4");
+    let file_path = "presents_dimensions.txt";
+    let mut paper_total: Feet = 0;
 
-    let some_box = Box::from_string(box1_input);
+    match fs::read_to_string(file_path) {
+        Ok(presents) => {
+            for line in presents.lines() {
+                let box1_input = line;
 
-    let paper = match some_box {
-        Ok(res) => res.get_wrapping_paper_needed(),
-        Err(err) => {
-            println!("{err}");
-            0
+                let some_box = Box::from_string(box1_input);
+
+                paper_total += match some_box {
+                    Ok(res) => res.get_wrapping_paper_needed(),
+                    Err(err) => {
+                        println!("{err}");
+                        0
+                    }
+                };
+            }
+            println!("{paper_total}");
         }
-    };
-
-    println!("{paper}");
+        Err(e) => {
+            println!("Error reading file at {file_path}. Error {e}");
+        }
+    }
 }
 
-fn split_string_by_delim(input: String, delim: char) -> Vec<String> {
+fn split_string_by_delim(input: &str, delim: char) -> Vec<String> {
     let mut delims: Vec<usize> = vec![];
 
     for (i, v) in input.chars().enumerate() {
