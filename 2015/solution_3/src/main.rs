@@ -15,6 +15,10 @@ impl Row {
         new_cells.append(&mut self.cells);
         self.cells = new_cells;
     }
+
+    fn append(&mut self) {
+        self.cells.push(0);
+    }
 }
 
 #[test]
@@ -22,6 +26,13 @@ fn test_prepend() {
     let mut row = Row { cells: vec![1, 2] };
     row.prepend();
     assert_eq!(vec![0, 1, 2], row.cells);
+}
+
+#[test]
+fn test_append() {
+    let mut row = Row { cells: vec![1, 2] };
+    row.append();
+    assert_eq!(vec![1, 2, 0], row.cells);
 }
 
 impl Grid {
