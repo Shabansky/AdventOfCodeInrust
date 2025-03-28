@@ -30,8 +30,36 @@ fn test_append() {
 }
 
 #[derive(Debug)]
+struct Cursor {
+    x: u32,
+    y: u32,
+}
+
+impl Cursor {
+    fn move_left(&mut self) {
+        if self.x > 0 {
+            self.x -= 1;
+        }
+    }
+
+    fn move_right(&mut self) {
+        self.x += 1;
+    }
+
+    fn move_up(&mut self) {
+        if self.y > 0 {
+            self.y -= 1;
+        }
+    }
+
+    fn move_down(&mut self) {
+        self.y += 1;
+    }
+}
+
+#[derive(Debug)]
 struct Grid {
-    cursor: (u32, u32),
+    cursor: Cursor,
     rows: Vec<Row>,
     width: u32,
     height: u32,
@@ -41,10 +69,10 @@ impl Grid {
     fn new() -> Grid {
         let row = Row { cells: vec![0] };
         let grid = Grid {
-            cursor: (0, 0),
+            cursor: Cursor { x: 0, y: 0 },
             rows: vec![row],
             width: 1,
-            height: 0,
+            height: 1,
         };
 
         grid
@@ -85,17 +113,70 @@ impl Grid {
             cells: vec![0; self.width as usize],
         }
     }
+
+    fn increment_cell(&mut self) {
+        let y_coord = self.cursor.y as usize;
+        let x_coord = self.cursor.x as usize;
+        self.rows[y_coord].cells[x_coord] += 1;
+    }
+
+    fn move_right(&mut self) {
+        if self.cursor.x + 1 == self.width {
+            self.grow_right();
+        }
+
+        self.cursor.move_right();
+        self.increment_cell();
+    }
+
+    fn move_left(&mut self) {
+        if self.cursor.x == 0 {
+            self.grow_left();
+        } else {
+            self.cursor.move_left();
+        }
+
+        self.increment_cell();
+    }
+
+    fn move_up(&mut self) {
+        if self.cursor.y == 0 {
+            self.grow_up();
+        } else {
+            self.cursor.move_up();
+        }
+
+        self.increment_cell();
+    }
+
+    fn move_down(&mut self) {
+        if self.cursor.y + 1 == self.height {
+            self.grow_down();
+        }
+
+        self.cursor.move_down();
+        self.increment_cell();
+    }
 }
 
 fn main() {
     let mut grid = Grid::new();
-    println!("{:#?}", grid);
-    grid.grow_left();
-    println!("{:#?}", grid);
-    grid.grow_right();
-    println!("{:#?}", grid);
-    grid.grow_up();
-    println!("{:#?}", grid);
-    grid.grow_down();
-    println!("{:#?}", grid);
+    grid.move_right();
+    grid.move_down();
+    grid.move_left();
+    grid.move_up();
+    grid.move_left();
+    grid.move_up();
+    grid.move_right();
+    grid.move_down();
+    draw(&grid);
+}
+
+fn draw(grid: &Grid) {
+    for row in grid.rows.iter() {
+        for cell in row.cells.iter() {
+            print!("{}", cell);
+        }
+        print!("\n");
+    }
 }
