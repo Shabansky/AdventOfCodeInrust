@@ -1,3 +1,7 @@
+use core::panic;
+use std::time::Duration;
+use std::{fs, thread};
+
 #[derive(Debug)]
 struct Row {
     cells: Vec<u32>,
@@ -63,6 +67,7 @@ struct Grid {
     rows: Vec<Row>,
     width: u32,
     height: u32,
+    visited_cells: u32,
 }
 
 impl Grid {
@@ -73,6 +78,7 @@ impl Grid {
             rows: vec![row],
             width: 1,
             height: 1,
+            visited_cells: 1,
         };
 
         grid
@@ -117,6 +123,11 @@ impl Grid {
     fn increment_cell(&mut self) {
         let y_coord = self.cursor.y as usize;
         let x_coord = self.cursor.x as usize;
+        let cell = self.rows[y_coord].cells[x_coord];
+
+        if cell == 0 {
+            self.visited_cells += 1;
+        }
         self.rows[y_coord].cells[x_coord] += 1;
     }
 
@@ -160,19 +171,36 @@ impl Grid {
 }
 
 fn main() {
-    let mut grid = Grid::new();
-    grid.move_right();
-    grid.move_down();
-    grid.move_left();
-    grid.move_up();
-    grid.move_left();
-    grid.move_up();
-    grid.move_right();
-    grid.move_down();
-    draw(&grid);
+    let file_path = "santa_directions.txt";
+
+    match fs::read_to_string(file_path) {
+        Ok(presents) => {
+            let mut grid = Grid::new();
+
+            for char in presents.chars() {
+                match char {
+                    '<' => grid.move_left(),
+                    '>' => grid.move_right(),
+                    '^' => grid.move_up(),
+                    'v' => grid.move_down(),
+                    _ => panic!("Invalid character. Exiting."),
+                }
+
+                // Feel free to uncomment the below for some terminal fun!
+                // thread::sleep(Duration::from_millis(50));
+                // print!("{}[2J", 27 as char);
+                // draw(&grid);
+            }
+            println!("{}", grid.visited_cells);
+        }
+        Err(e) => {
+            println!("Error reading file at {file_path}. Error {e}");
+        }
+    }
 }
 
 fn draw(grid: &Grid) {
+    println!("{} cells visited", grid.visited_cells);
     for row in grid.rows.iter() {
         for cell in row.cells.iter() {
             print!("{}", cell);
