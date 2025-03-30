@@ -122,6 +122,10 @@ impl Grid {
         }
     }
 
+    fn add_cursor(&mut self) {
+        self.cursors.push(Cursor { x: 0, y: 0 });
+    }
+
     fn rotate_cursors(&mut self) {
         todo!();
     }
@@ -203,6 +207,7 @@ fn main() {
     match fs::read_to_string(file_path) {
         Ok(presents) => {
             let mut grid = Grid::new();
+            grid.add_cursor();
 
             for char in presents.chars() {
                 match char {
