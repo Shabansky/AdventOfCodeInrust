@@ -63,7 +63,8 @@ impl Cursor {
 
 #[derive(Debug)]
 struct Grid {
-    cursor: Cursor,
+    active_cursor: usize,
+    cursors: Vec<Cursor>,
     rows: Vec<Row>,
     width: u32,
     height: u32,
@@ -74,7 +75,8 @@ impl Grid {
     fn new() -> Grid {
         let row = Row { cells: vec![0] };
         let grid = Grid {
-            cursor: Cursor { x: 0, y: 0 },
+            active_cursor: 0,
+            cursors: vec![Cursor { x: 0, y: 0 }],
             rows: vec![row],
             width: 1,
             height: 1,
@@ -120,9 +122,30 @@ impl Grid {
         }
     }
 
+    fn rotate_cursors(&mut self) {
+        todo!();
+    }
+
+    fn get_active_cursor(&self) -> &Cursor {
+        &self.cursors[self.active_cursor]
+    }
+
+    fn get_active_cursor_mut(&mut self) -> &mut Cursor {
+        &mut self.cursors[self.active_cursor]
+    }
+
+    fn set_active_cursor(&mut self, index: usize) {
+        let Some(_) = self.cursors.get(index) else {
+            panic!("Trying to retrieve non-existing cursor with index {index}")
+        };
+
+        self.active_cursor = index;
+    }
+
     fn increment_cell(&mut self) {
-        let y_coord = self.cursor.y as usize;
-        let x_coord = self.cursor.x as usize;
+        let active_cursor = self.get_active_cursor();
+        let y_coord = active_cursor.y as usize;
+        let x_coord = active_cursor.x as usize;
         let cell = self.rows[y_coord].cells[x_coord];
 
         if cell == 0 {
@@ -132,40 +155,44 @@ impl Grid {
     }
 
     fn move_right(&mut self) {
-        if self.cursor.x + 1 == self.width {
+        let active_cursor = self.get_active_cursor();
+        if active_cursor.x + 1 == self.width {
             self.grow_right();
         }
 
-        self.cursor.move_right();
+        self.get_active_cursor_mut().move_right();
         self.increment_cell();
     }
 
     fn move_left(&mut self) {
-        if self.cursor.x == 0 {
+        let active_cursor = self.get_active_cursor_mut();
+        if active_cursor.x == 0 {
             self.grow_left();
         } else {
-            self.cursor.move_left();
+            active_cursor.move_left();
         }
 
         self.increment_cell();
     }
 
     fn move_up(&mut self) {
-        if self.cursor.y == 0 {
+        let active_cursor = self.get_active_cursor_mut();
+        if active_cursor.y == 0 {
             self.grow_up();
         } else {
-            self.cursor.move_up();
+            active_cursor.move_up();
         }
 
         self.increment_cell();
     }
 
     fn move_down(&mut self) {
-        if self.cursor.y + 1 == self.height {
+        let active_cursor = self.get_active_cursor();
+        if active_cursor.y + 1 == self.height {
             self.grow_down();
         }
 
-        self.cursor.move_down();
+        self.get_active_cursor_mut().move_down();
         self.increment_cell();
     }
 }
