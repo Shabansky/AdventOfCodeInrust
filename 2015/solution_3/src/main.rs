@@ -223,14 +223,10 @@ impl Grid {
 fn main() {
     let file_path = "santa_directions.txt";
 
-    let mut santa_map = String::from("");
-
-    let input = match fs::read_to_string(file_path) {
-        Ok(map) => {
-            santa_map = map;
-        }
+    let santa_map = match fs::read_to_string(file_path) {
+        Ok(map) => map,
         Err(e) => {
-            println!("Error reading file at {file_path}. Error {e}");
+            panic!("Error reading file at {file_path}. Error {e}");
         }
     };
 
