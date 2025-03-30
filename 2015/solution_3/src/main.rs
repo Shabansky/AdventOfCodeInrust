@@ -1,4 +1,5 @@
 use core::panic;
+use std::fs;
 
 #[derive(Debug)]
 struct Row {
@@ -249,7 +250,7 @@ fn main() {
 
         // Feel free to uncomment the below for some terminal fun!
         // use std::time::Duration;
-        // use std::{fs, thread};
+        // use std::thread;
         // thread::sleep(Duration::from_millis(50));
         // print!("{}[2J", 27 as char);
         // draw(&grid);
