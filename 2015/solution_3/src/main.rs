@@ -189,6 +189,7 @@ impl Grid {
     fn move_left(&mut self) {
         let active_cursor = self.get_active_cursor_mut();
         if active_cursor.x == 0 {
+            //Explicit move of the cursor is not needed as it will maintain a x of 0
             self.grow_left();
         } else {
             active_cursor.move_left();
@@ -200,6 +201,7 @@ impl Grid {
     fn move_up(&mut self) {
         let active_cursor = self.get_active_cursor_mut();
         if active_cursor.y == 0 {
+            //Explicit move of the cursor is not needed as it will maintain a y of 0
             self.grow_up();
         } else {
             active_cursor.move_up();
@@ -245,9 +247,9 @@ fn main() {
         grid.rotate_cursors();
 
         // Feel free to uncomment the below for some terminal fun!
-        // use std::time::Duration;
         // use std::thread;
-        // thread::sleep(Duration::from_millis(50));
+        // use std::time::Duration;
+        // thread::sleep(Duration::from_millis(10));
         // print!("{}[2J", 27 as char);
         // draw(&grid);
     }
@@ -258,7 +260,11 @@ fn draw(grid: &Grid) {
     println!("{} cells visited", grid.visited_cells);
     for row in grid.rows.iter() {
         for cell in row.cells.iter() {
-            print!("{}", cell);
+            if *cell == 0 {
+                print!(" ");
+            } else {
+                print!("{}", cell);
+            }
         }
         print!("\n");
     }
