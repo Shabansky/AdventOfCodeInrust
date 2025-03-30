@@ -1,6 +1,4 @@
 use core::panic;
-use std::time::Duration;
-use std::{fs, thread};
 
 #[derive(Debug)]
 struct Row {
@@ -73,7 +71,7 @@ struct Grid {
 
 impl Grid {
     fn new() -> Grid {
-        let row = Row { cells: vec![0] };
+        let row = Row { cells: vec![1] };
         let grid = Grid {
             active_cursor: 0,
             cursors: vec![Cursor { x: 0, y: 0 }],
@@ -91,6 +89,12 @@ impl Grid {
             row.prepend();
         }
 
+        for (index, cursor) in self.cursors.iter_mut().enumerate() {
+            if index != self.active_cursor {
+                cursor.x += 1;
+            }
+        }
+
         self.width += 1;
     }
 
@@ -106,6 +110,12 @@ impl Grid {
         let mut new_rows = vec![self.new_row()];
         new_rows.append(&mut self.rows);
         self.rows = new_rows;
+
+        for (index, cursor) in self.cursors.iter_mut().enumerate() {
+            if index != self.active_cursor {
+                cursor.y += 1;
+            }
+        }
 
         self.height += 1;
     }
@@ -127,7 +137,13 @@ impl Grid {
     }
 
     fn rotate_cursors(&mut self) {
-        todo!();
+        let mut next_cursor = self.active_cursor + 1;
+
+        if let None = self.cursors.get(next_cursor) {
+            next_cursor = 0;
+        };
+
+        self.set_active_cursor(next_cursor);
     }
 
     fn get_active_cursor(&self) -> &Cursor {
@@ -165,6 +181,7 @@ impl Grid {
         }
 
         self.get_active_cursor_mut().move_right();
+
         self.increment_cell();
     }
 
@@ -197,6 +214,7 @@ impl Grid {
         }
 
         self.get_active_cursor_mut().move_down();
+
         self.increment_cell();
     }
 }
@@ -204,31 +222,39 @@ impl Grid {
 fn main() {
     let file_path = "santa_directions.txt";
 
-    match fs::read_to_string(file_path) {
-        Ok(presents) => {
-            let mut grid = Grid::new();
-            grid.add_cursor();
+    let mut santa_map = String::from("");
 
-            for char in presents.chars() {
-                match char {
-                    '<' => grid.move_left(),
-                    '>' => grid.move_right(),
-                    '^' => grid.move_up(),
-                    'v' => grid.move_down(),
-                    _ => panic!("Invalid character. Exiting."),
-                }
-
-                // Feel free to uncomment the below for some terminal fun!
-                // thread::sleep(Duration::from_millis(50));
-                // print!("{}[2J", 27 as char);
-                // draw(&grid);
-            }
-            println!("{}", grid.visited_cells);
+    let input = match fs::read_to_string(file_path) {
+        Ok(map) => {
+            santa_map = map;
         }
         Err(e) => {
             println!("Error reading file at {file_path}. Error {e}");
         }
+    };
+
+    let mut grid = Grid::new();
+    grid.add_cursor();
+
+    for char in santa_map.chars() {
+        match char {
+            '<' => grid.move_left(),
+            '>' => grid.move_right(),
+            '^' => grid.move_up(),
+            'v' => grid.move_down(),
+            _ => panic!("Invalid character. Exiting."),
+        }
+
+        grid.rotate_cursors();
+
+        // Feel free to uncomment the below for some terminal fun!
+        // use std::time::Duration;
+        // use std::{fs, thread};
+        // thread::sleep(Duration::from_millis(50));
+        // print!("{}[2J", 27 as char);
+        // draw(&grid);
     }
+    println!("{}", grid.visited_cells);
 }
 
 fn draw(grid: &Grid) {
