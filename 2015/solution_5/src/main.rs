@@ -1,5 +1,29 @@
 fn main() {}
 
+fn string_is_nice(text: &String) -> bool {
+    has_num_of_vowels(&text, 3)
+        && has_reoccuring_letters(&text, 2)
+        && !has_forbidden_sequences(&text)
+}
+
+#[test]
+fn test_string_is_nice() {
+    let text = String::from("ugknbfddgicrmopn");
+    assert_eq!(true, string_is_nice(&text));
+
+    let text = String::from("aaa");
+    assert_eq!(true, string_is_nice(&text));
+
+    let text = String::from("jchzalrnumimnmhp");
+    assert_eq!(false, string_is_nice(&text));
+
+    let text = String::from("haegwjzuvuyypxyu");
+    assert_eq!(false, string_is_nice(&text));
+
+    let text = String::from("dvszwmarrgswjxmb");
+    assert_eq!(false, string_is_nice(&text));
+}
+
 fn has_num_of_vowels(text: &String, threshold: u32) -> bool {
     let vowels = [b'a', b'e', b'i', b'o', b'u'];
 
