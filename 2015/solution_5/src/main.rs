@@ -1,6 +1,22 @@
-fn main() {}
+use std::fs;
 
-fn string_is_nice(text: &String) -> bool {
+fn main() {
+    let text = match fs::read_to_string("input.txt") {
+        Ok(text) => text,
+        Err(e) => panic!("Error reading file: {e}"),
+    };
+
+    let mut num_good_strings = 0;
+    for line in text.lines() {
+        if string_is_nice(line) {
+            num_good_strings += 1;
+        }
+    }
+
+    println!("Num of good strings: {num_good_strings}");
+}
+
+fn string_is_nice(text: &str) -> bool {
     has_num_of_vowels(&text, 3)
         && has_reoccuring_letters(&text, 2)
         && !has_forbidden_sequences(&text)
@@ -24,7 +40,7 @@ fn test_string_is_nice() {
     assert_eq!(false, string_is_nice(&text));
 }
 
-fn has_num_of_vowels(text: &String, threshold: u32) -> bool {
+fn has_num_of_vowels(text: &str, threshold: u32) -> bool {
     let vowels = [b'a', b'e', b'i', b'o', b'u'];
 
     let mut num_vowels = 0;
@@ -51,7 +67,7 @@ fn test_has_num_of_vowels() {
     assert_eq!(true, has_num_of_vowels(&text, 1));
 }
 
-fn has_reoccuring_letters(text: &String, occurences_threshold: u32) -> bool {
+fn has_reoccuring_letters(text: &str, occurences_threshold: u32) -> bool {
     let text_as_bytes = text.as_bytes();
     let mut current_char = text_as_bytes[0];
     let mut occurences = 1;
@@ -94,7 +110,7 @@ fn test_has_reoccuring_letters() {
 Checks if any of the following sequences is present in the string:
 ab, cd, pq, xy
 */
-fn has_forbidden_sequences(text: &String) -> bool {
+fn has_forbidden_sequences(text: &str) -> bool {
     let suspicious_chars = [b'b', b'd', b'q', b'y'];
     let text_as_bytes = text.as_bytes();
 
