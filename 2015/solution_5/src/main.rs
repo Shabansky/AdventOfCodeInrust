@@ -26,3 +26,42 @@ fn test_has_num_of_vowels() {
     let text = String::from("(@S@DM(92da!!#X");
     assert_eq!(true, has_num_of_vowels(&text, 1));
 }
+
+fn has_reoccuring_letters(text: &String, occurences_threshold: u32) -> bool {
+    let text_as_bytes = text.as_bytes();
+    let mut current_char = text_as_bytes[0];
+    let mut occurences = 1;
+
+    for (i, v) in text_as_bytes.iter().enumerate() {
+        if i == 0 {
+            continue;
+        }
+
+        if *v != current_char {
+            occurences = 1;
+            current_char = *v;
+            continue;
+        }
+
+        occurences += 1;
+
+        if occurences == occurences_threshold {
+            return true;
+        }
+    }
+    false
+}
+
+#[test]
+fn test_has_reoccuring_letters() {
+    let text = String::from("abcdefg");
+    assert_eq!(false, has_reoccuring_letters(&text, 2));
+    let text = String::from("somethingxx");
+    assert_eq!(true, has_reoccuring_letters(&text, 2));
+    let text = String::from("xxsomething");
+    assert_eq!(true, has_reoccuring_letters(&text, 2));
+    let text = String::from("sometxxhing");
+    assert_eq!(true, has_reoccuring_letters(&text, 2));
+    let text = String::from("xX");
+    assert_eq!(false, has_reoccuring_letters(&text, 2));
+}
