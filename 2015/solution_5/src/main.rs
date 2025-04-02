@@ -65,3 +65,38 @@ fn test_has_reoccuring_letters() {
     let text = String::from("xX");
     assert_eq!(false, has_reoccuring_letters(&text, 2));
 }
+
+/*
+Checks if any of the following sequences is present in the string:
+ab, cd, pq, xy
+*/
+fn has_forbidden_sequences(text: &String) -> bool {
+    let suspicious_chars = [b'b', b'd', b'q', b'y'];
+    let text_as_bytes = text.as_bytes();
+
+    for (i, v) in text_as_bytes.iter().enumerate() {
+        //Skip first element as there's nothing to compare it against
+        if i == 0 {
+            continue;
+        }
+
+        if !suspicious_chars.contains(v) {
+            continue;
+        }
+
+        if text_as_bytes[i - 1] == v - 1 {
+            return true;
+        }
+    }
+    false
+}
+
+#[test]
+fn test_has_forbidden_sequences() {
+    let text = String::from("abcdefg");
+    assert_eq!(true, has_forbidden_sequences(&text));
+    let text = String::from("1111111");
+    assert_eq!(false, has_forbidden_sequences(&text));
+    let text = String::from("axyb");
+    assert_eq!(true, has_forbidden_sequences(&text));
+}
