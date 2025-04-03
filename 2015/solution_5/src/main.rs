@@ -48,10 +48,15 @@ fn has_num_of_vowels(text: &str, threshold: u32) -> bool {
     for v in text.as_bytes().iter() {
         if vowels.contains(v) {
             num_vowels += 1;
+
+            if num_vowels >= threshold {
+                return true;
+            }
         }
     }
 
-    num_vowels >= threshold
+    //Explicit return checker for case threshold = 0 nad vowels = 0
+    num_vowels == threshold
 }
 
 #[test]
