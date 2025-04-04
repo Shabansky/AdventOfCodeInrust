@@ -5,6 +5,7 @@ type byte = u8;
 trait Rule {
     fn process_char(&mut self, line: &String, index: usize, char: &byte);
     fn is_true(&self) -> bool;
+    fn reset(&mut self);
 }
 
 struct VowelRule {
@@ -24,6 +25,10 @@ impl Rule for VowelRule {
     fn is_true(&self) -> bool {
         self.num_vowels >= self.threshold
     }
+
+    fn reset(&mut self) {
+        self.num_vowels = 0;
+    }
 }
 
 impl VowelRule {
@@ -35,8 +40,52 @@ impl VowelRule {
     }
 }
 
+struct ReccuringLettersRule {
+    num_occurences: u32,
+    threshold: u32,
+    current_char: u8,
+}
+
+impl Rule for ReccuringLettersRule {
+    fn process_char(&mut self, line: &String, index: usize, char: &byte) {
+        let char = *char;
+
+        if index == 0 {
+            self.current_char = char;
+            return;
+        }
+
+        if char != self.current_char {
+            self.num_occurences = 1;
+            self.current_char = char;
+            return;
+        }
+
+        self.num_occurences += 1;
+    }
+
+    fn is_true(&self) -> bool {
+        self.num_occurences >= self.threshold
+    }
+
+    fn reset(&mut self) {
+        self.num_occurences = 0;
+        self.current_char = 0;
+    }
+}
+
+impl ReccuringLettersRule {
+    fn new(threshold: u32) -> Self {
+        Self {
+            threshold: threshold,
+            num_occurences: 1,
+            current_char: 0,
+        }
+    }
+}
+
 struct ForbiddenCharsRule {
-    is_true: bool,
+    is_forbidden: bool,
 }
 
 impl Rule for ForbiddenCharsRule {
@@ -53,19 +102,52 @@ impl Rule for ForbiddenCharsRule {
             return;
         }
 
-        if text_as_bytes[index - 1] == char - 1 {
-            self.is_true = true;
-        }
+        self.is_forbidden = if text_as_bytes[index - 1] == char - 1 {
+            true
+        } else {
+            false
+        };
     }
 
     fn is_true(&self) -> bool {
-        true
+        !self.is_forbidden
     }
+
+    fn reset(&mut self) {
+        self.is_forbidden = false;
+    }
+}
+
+/*
+Checks if any of the following sequences is present in the string:
+ab, cd, pq, xy
+*/
+fn has_forbidden_sequences(text: &str) -> bool {
+    let suspicious_chars = [b'b', b'd', b'q', b'y'];
+    let text_as_bytes = text.as_bytes();
+
+    for (i, v) in text_as_bytes.iter().enumerate() {
+        //Skip first element as there's nothing to compare it against
+        if i == 0 {
+            continue;
+        }
+
+        if !suspicious_chars.contains(v) {
+            continue;
+        }
+
+        if text_as_bytes[i - 1] == v - 1 {
+            return true;
+        }
+    }
+    false
 }
 
 impl ForbiddenCharsRule {
     fn new() -> Self {
-        ForbiddenCharsRule { is_true: false }
+        ForbiddenCharsRule {
+            is_forbidden: false,
+        }
     }
 }
 
@@ -112,38 +194,56 @@ impl LineChecker {
         }
     }
 
-    fn is_good_string(&self) -> bool {
+    fn is_good_string(&mut self) -> bool {
+        let mut is_good = true;
+
         for rule_row in self.rules.iter() {
             if rule_row.passed == false {
-                return false;
+                is_good = false;
+                break;
             }
         }
-        true
+
+        self.reset_rules();
+        is_good
+    }
+
+    fn reset_rules(&mut self) {
+        for rule_row in self.rules.iter_mut() {
+            rule_row.passed = false;
+            rule_row.rule.reset();
+        }
     }
 }
 
 fn main() {
     let mut line_checker = LineChecker::new();
     line_checker.add_rule(VowelRule::new(3));
+    line_checker.add_rule(ReccuringLettersRule::new(2));
     line_checker.add_rule(ForbiddenCharsRule::new());
 
-    let text = String::from("adsadsad");
-    line_checker.run_on(&text);
-    line_checker.is_good_string();
+    let text = match fs::read_to_string("input.txt") {
+        Ok(text) => text,
+        Err(e) => panic!("Error reading file: {e}"),
+    };
 
-    // let text = match fs::read_to_string("input.txt") {
-    //     Ok(text) => text,
-    //     Err(e) => panic!("Error reading file: {e}"),
-    // };
+    let mut num_good_strings_original = 0;
+    let mut num_good_strings_modified = 0;
+    for line in text.lines() {
+        //Struct implementation
+        line_checker.run_on(&String::from(line));
+        if line_checker.is_good_string() {
+            num_good_strings_modified += 1;
+        }
 
-    // let mut num_good_strings = 0;
-    // for line in text.lines() {
-    //     if string_is_nice(line) {
-    //         num_good_strings += 1;
-    //     }
-    // }
+        //Original implementation
+        if string_is_nice(&line) {
+            num_good_strings_original += 1;
+        }
+    }
 
-    // println!("Num of good strings: {num_good_strings}");
+    println!("Num of good strings via struct: {num_good_strings_modified}");
+    println!("Num of good strings original: {num_good_strings_original}");
 }
 
 fn string_is_nice(text: &str) -> bool {
@@ -239,31 +339,6 @@ fn test_has_reoccuring_letters() {
     assert_eq!(true, has_reoccuring_letters(&text, 2));
     let text = String::from("xX");
     assert_eq!(false, has_reoccuring_letters(&text, 2));
-}
-
-/*
-Checks if any of the following sequences is present in the string:
-ab, cd, pq, xy
-*/
-fn has_forbidden_sequences(text: &str) -> bool {
-    let suspicious_chars = [b'b', b'd', b'q', b'y'];
-    let text_as_bytes = text.as_bytes();
-
-    for (i, v) in text_as_bytes.iter().enumerate() {
-        //Skip first element as there's nothing to compare it against
-        if i == 0 {
-            continue;
-        }
-
-        if !suspicious_chars.contains(v) {
-            continue;
-        }
-
-        if text_as_bytes[i - 1] == v - 1 {
-            return true;
-        }
-    }
-    false
 }
 
 #[test]
