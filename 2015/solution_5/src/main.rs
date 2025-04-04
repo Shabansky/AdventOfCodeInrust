@@ -1,7 +1,9 @@
 use std::fs;
 
+type byte = u8;
+
 trait Rule {
-    fn process_char(&self, character: &char);
+    fn process_char(&mut self, line: &String, index: usize, char: &byte);
     fn is_true(&self) -> bool;
 }
 
@@ -11,12 +13,16 @@ struct VowelRule {
 }
 
 impl Rule for VowelRule {
-    fn process_char(&self, character: &char) {
-        println!("VowelsRule");
+    fn process_char(&mut self, line: &String, index: usize, char: &byte) {
+        let vowels = [b'a', b'e', b'i', b'o', b'u'];
+
+        if vowels.contains(char) {
+            self.num_vowels += 1;
+        }
     }
 
     fn is_true(&self) -> bool {
-        true
+        self.num_vowels >= self.threshold
     }
 }
 
@@ -29,11 +35,27 @@ impl VowelRule {
     }
 }
 
-struct ForbiddenCharsRule {}
+struct ForbiddenCharsRule {
+    is_true: bool,
+}
 
 impl Rule for ForbiddenCharsRule {
-    fn process_char(&self, character: &char) {
-        println!("ForbiddenCharsRule");
+    fn process_char(&mut self, line: &String, index: usize, char: &byte) {
+        let suspicious_chars = [b'b', b'd', b'q', b'y'];
+        let text_as_bytes = line.as_bytes();
+
+        //Skip first element as there's nothing to compare it against
+        if index == 0 {
+            return;
+        }
+
+        if !suspicious_chars.contains(char) {
+            return;
+        }
+
+        if text_as_bytes[index - 1] == char - 1 {
+            self.is_true = true;
+        }
     }
 
     fn is_true(&self) -> bool {
@@ -43,7 +65,7 @@ impl Rule for ForbiddenCharsRule {
 
 impl ForbiddenCharsRule {
     fn new() -> Self {
-        ForbiddenCharsRule {}
+        ForbiddenCharsRule { is_true: false }
     }
 }
 
@@ -75,19 +97,28 @@ impl LineChecker {
 
     fn run_on(&mut self, text: &String) {
         self.line = text.to_string();
-        for (index, char) in text.chars().enumerate() {
-            self.run_rules_on_char(&char);
+        for (index, char) in text.as_bytes().iter().enumerate() {
+            self.run_rules_on_byte(index, &char);
         }
     }
 
-    fn run_rules_on_char(&mut self, char: &char) {
+    fn run_rules_on_byte(&mut self, index: usize, char: &byte) {
         for rule_row in &mut self.rules {
-            let rule = &rule_row.rule;
-            rule.process_char(&char);
+            let rule = &mut rule_row.rule;
+            rule.process_char(&self.line, index, &char);
             if rule.is_true() {
                 rule_row.passed = true;
             }
         }
+    }
+
+    fn is_good_string(&self) -> bool {
+        for rule_row in self.rules.iter() {
+            if rule_row.passed == false {
+                return false;
+            }
+        }
+        true
     }
 }
 
@@ -98,6 +129,7 @@ fn main() {
 
     let text = String::from("adsadsad");
     line_checker.run_on(&text);
+    line_checker.is_good_string();
 
     // let text = match fs::read_to_string("input.txt") {
     //     Ok(text) => text,
