@@ -1,19 +1,117 @@
 use std::fs;
 
-fn main() {
-    let text = match fs::read_to_string("input.txt") {
-        Ok(text) => text,
-        Err(e) => panic!("Error reading file: {e}"),
-    };
+trait Rule {
+    fn process_char(&self, character: &char);
+    fn is_true(&self) -> bool;
+}
 
-    let mut num_good_strings = 0;
-    for line in text.lines() {
-        if string_is_nice(line) {
-            num_good_strings += 1;
+struct VowelRule {
+    threshold: u32,
+    num_vowels: u32,
+}
+
+impl Rule for VowelRule {
+    fn process_char(&self, character: &char) {
+        println!("VowelsRule");
+    }
+
+    fn is_true(&self) -> bool {
+        true
+    }
+}
+
+impl VowelRule {
+    fn new(threshold: u32) -> Self {
+        Self {
+            threshold: threshold,
+            num_vowels: 0,
+        }
+    }
+}
+
+struct ForbiddenCharsRule {}
+
+impl Rule for ForbiddenCharsRule {
+    fn process_char(&self, character: &char) {
+        println!("ForbiddenCharsRule");
+    }
+
+    fn is_true(&self) -> bool {
+        true
+    }
+}
+
+impl ForbiddenCharsRule {
+    fn new() -> Self {
+        ForbiddenCharsRule {}
+    }
+}
+
+struct RuleRow {
+    rule: Box<dyn Rule>,
+    passed: bool,
+}
+
+struct LineChecker {
+    line: String,
+    rules: Vec<RuleRow>,
+}
+
+impl LineChecker {
+    //TODO: Why is the + 'static' needed here?
+    fn add_rule<T: Rule + 'static>(&mut self, rule: T) {
+        self.rules.push(RuleRow {
+            rule: Box::new(rule),
+            passed: false,
+        });
+    }
+
+    fn new() -> Self {
+        Self {
+            line: String::from(""),
+            rules: vec![],
         }
     }
 
-    println!("Num of good strings: {num_good_strings}");
+    fn run_on(&mut self, text: &String) {
+        self.line = text.to_string();
+        for (index, char) in text.chars().enumerate() {
+            self.run_rules_on_char(&char);
+        }
+    }
+
+    fn run_rules_on_char(&mut self, char: &char) {
+        for rule_row in &mut self.rules {
+            let rule = &rule_row.rule;
+            rule.process_char(&char);
+            if rule.is_true() {
+                rule_row.passed = true;
+            }
+        }
+    }
+}
+
+fn main() {
+    let mut line_checker = LineChecker::new();
+    line_checker.add_rule(VowelRule::new(3));
+    line_checker.add_rule(ForbiddenCharsRule::new());
+
+    let text = String::from("adsadsad");
+    line_checker.run_on(&text);
+
+    // let text = match fs::read_to_string("input.txt") {
+    //     Ok(text) => text,
+    //     Err(e) => panic!("Error reading file: {e}"),
+    // };
+
+    // let mut num_good_strings = 0;
+    // for line in text.lines() {
+    //     if string_is_nice(line) {
+    //         num_good_strings += 1;
+    //     }
+    // }
+
+    // println!("Num of good strings: {num_good_strings}");
 }
 
 fn string_is_nice(text: &str) -> bool {
