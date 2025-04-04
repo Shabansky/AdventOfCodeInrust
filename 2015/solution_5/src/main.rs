@@ -1,9 +1,9 @@
 use std::fs;
 
-type byte = u8;
+type Byte = u8;
 
 trait Rule {
-    fn process_char(&mut self, line: &String, index: usize, char: &byte);
+    fn process_char(&mut self, line: &String, index: usize, char: &Byte);
     fn is_true(&self) -> bool;
     fn reset(&mut self);
 }
@@ -14,7 +14,7 @@ struct VowelRule {
 }
 
 impl Rule for VowelRule {
-    fn process_char(&mut self, line: &String, index: usize, char: &byte) {
+    fn process_char(&mut self, _: &String, _: usize, char: &Byte) {
         let vowels = [b'a', b'e', b'i', b'o', b'u'];
 
         if vowels.contains(char) {
@@ -47,7 +47,7 @@ struct ReccuringLettersRule {
 }
 
 impl Rule for ReccuringLettersRule {
-    fn process_char(&mut self, line: &String, index: usize, char: &byte) {
+    fn process_char(&mut self, _: &String, index: usize, char: &Byte) {
         let char = *char;
 
         if index == 0 {
@@ -89,7 +89,7 @@ struct ForbiddenCharsRule {
 }
 
 impl Rule for ForbiddenCharsRule {
-    fn process_char(&mut self, line: &String, index: usize, char: &byte) {
+    fn process_char(&mut self, line: &String, index: usize, char: &Byte) {
         let suspicious_chars = [b'b', b'd', b'q', b'y'];
         let text_as_bytes = line.as_bytes();
 
@@ -184,7 +184,7 @@ impl LineChecker {
         }
     }
 
-    fn run_rules_on_byte(&mut self, index: usize, char: &byte) {
+    fn run_rules_on_byte(&mut self, index: usize, char: &Byte) {
         for rule_row in &mut self.rules {
             let rule = &mut rule_row.rule;
             rule.process_char(&self.line, index, &char);
