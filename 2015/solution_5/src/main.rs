@@ -3,8 +3,8 @@ use std::fs;
 type Byte = u8;
 
 trait Rule {
-    fn process_char(&mut self, line: &String, index: usize, char: &Byte);
-    fn is_true(&self) -> bool;
+    fn process_char(&mut self, line: &String, index: usize, char: Byte);
+    fn passes(&self) -> bool;
     fn reset(&mut self);
 }
 
@@ -14,15 +14,15 @@ struct VowelRule {
 }
 
 impl Rule for VowelRule {
-    fn process_char(&mut self, _: &String, _: usize, char: &Byte) {
+    fn process_char(&mut self, _: &String, _: usize, char: Byte) {
         let vowels = [b'a', b'e', b'i', b'o', b'u'];
 
-        if vowels.contains(char) {
+        if vowels.contains(&char) {
             self.num_vowels += 1;
         }
     }
 
-    fn is_true(&self) -> bool {
+    fn passes(&self) -> bool {
         self.num_vowels >= self.threshold
     }
 
@@ -47,9 +47,7 @@ struct ReccuringLettersRule {
 }
 
 impl Rule for ReccuringLettersRule {
-    fn process_char(&mut self, _: &String, index: usize, char: &Byte) {
-        let char = *char;
-
+    fn process_char(&mut self, _: &String, index: usize, char: Byte) {
         if index == 0 {
             self.current_char = char;
             return;
@@ -64,7 +62,7 @@ impl Rule for ReccuringLettersRule {
         self.num_occurences += 1;
     }
 
-    fn is_true(&self) -> bool {
+    fn passes(&self) -> bool {
         self.num_occurences >= self.threshold
     }
 
@@ -89,19 +87,24 @@ struct ForbiddenCharsRule {
 }
 
 impl Rule for ForbiddenCharsRule {
-    fn process_char(&mut self, line: &String, index: usize, char: &Byte) {
-        let suspicious_chars = [b'b', b'd', b'q', b'y'];
-        let text_as_bytes = line.as_bytes();
-
+    fn process_char(&mut self, line: &String, index: usize, char: Byte) {
         //Skip first element as there's nothing to compare it against
         if index == 0 {
             return;
         }
 
-        if !suspicious_chars.contains(char) {
+        if self.is_forbidden == true {
             return;
         }
 
+        let suspicious_chars = [b'b', b'd', b'q', b'y'];
+
+        if !suspicious_chars.contains(&char) {
+            self.is_forbidden = false;
+            return;
+        }
+
+        let text_as_bytes = line.as_bytes();
         self.is_forbidden = if text_as_bytes[index - 1] == char - 1 {
             true
         } else {
@@ -109,7 +112,7 @@ impl Rule for ForbiddenCharsRule {
         };
     }
 
-    fn is_true(&self) -> bool {
+    fn passes(&self) -> bool {
         !self.is_forbidden
     }
 
@@ -118,8 +121,21 @@ impl Rule for ForbiddenCharsRule {
     }
 }
 
+#[test]
+fn test_has_forbidden_sequences() {
+    let mut line_checker = LineChecker::new();
+    line_checker.add_rule(ForbiddenCharsRule::new());
+
+    let text = String::from("abcdefg");
+    assert_eq!(false, line_checker.check(&text));
+    let text = String::from("1111111");
+    assert_eq!(true, line_checker.check(&text));
+    let text = String::from("axyb");
+    assert_eq!(false, line_checker.check(&text));
+}
+
 /*
-Checks if any of the following sequences is present in the string:
+Checks if any of the following sequences are present in the string:
 ab, cd, pq, xy
 */
 fn has_forbidden_sequences(text: &str) -> bool {
@@ -177,19 +193,26 @@ impl LineChecker {
         }
     }
 
-    fn run_on(&mut self, text: &String) {
+    fn check(&mut self, text: &String) -> bool {
         self.line = text.to_string();
         for (index, char) in text.as_bytes().iter().enumerate() {
-            self.run_rules_on_byte(index, &char);
+            self.run_rules_on_byte(index, *char);
         }
+
+        let is_good_string = self.is_good_string();
+        self.reset_rules();
+
+        is_good_string
     }
 
-    fn run_rules_on_byte(&mut self, index: usize, char: &Byte) {
+    fn run_rules_on_byte(&mut self, index: usize, char: Byte) {
         for rule_row in &mut self.rules {
             let rule = &mut rule_row.rule;
-            rule.process_char(&self.line, index, &char);
-            if rule.is_true() {
+            rule.process_char(&self.line, index, char);
+            if rule.passes() {
                 rule_row.passed = true;
+            } else {
+                rule_row.passed = false;
             }
         }
     }
@@ -204,7 +227,6 @@ impl LineChecker {
             }
         }
 
-        self.reset_rules();
         is_good
     }
 
@@ -231,8 +253,7 @@ fn main() {
     let mut num_good_strings_modified = 0;
     for line in text.lines() {
         //Struct implementation
-        line_checker.run_on(&String::from(line));
-        if line_checker.is_good_string() {
+        if line_checker.check(&String::from(line)) {
             num_good_strings_modified += 1;
         }
 
@@ -342,7 +363,7 @@ fn test_has_reoccuring_letters() {
 }
 
 #[test]
-fn test_has_forbidden_sequences() {
+fn test_has_forbidden_sequences_original() {
     let text = String::from("abcdefg");
     assert_eq!(true, has_forbidden_sequences(&text));
     let text = String::from("1111111");
