@@ -31,6 +31,28 @@ impl Rule for VowelRule {
     }
 }
 
+#[test]
+fn test_has_num_of_vowels() {
+    let mut line_checker = LineChecker::new();
+    line_checker.add_rule(VowelRule::new(3));
+
+    let text = String::from("test");
+    assert_eq!(false, line_checker.check(&text));
+    let text = String::from("aaabcd");
+    assert_eq!(true, line_checker.check(&text));
+    let text = String::from("      ");
+    assert_eq!(false, line_checker.check(&text));
+
+    let mut line_checker = LineChecker::new();
+    line_checker.add_rule(VowelRule::new(0));
+    assert_eq!(true, line_checker.check(&text));
+
+    let text = String::from("(@S@DM(92da!!#X");
+    let mut line_checker = LineChecker::new();
+    line_checker.add_rule(VowelRule::new(1));
+    assert_eq!(true, line_checker.check(&text));
+}
+
 impl VowelRule {
     fn new(threshold: u32) -> Self {
         Self {
@@ -73,25 +95,21 @@ impl Rule for ReccuringLettersRule {
 }
 
 #[test]
-fn test_has_num_of_vowels() {
+fn test_has_reoccuring_letters() {
     let mut line_checker = LineChecker::new();
-    line_checker.add_rule(VowelRule::new(3));
+    line_checker.add_rule(ReccuringLettersRule::new(2));
 
-    let text = String::from("test");
-    assert_eq!(false, line_checker.check(&text));
-    let text = String::from("aaabcd");
-    assert_eq!(true, line_checker.check(&text));
-    let text = String::from("      ");
+    let text = String::from("abcdefg");
     assert_eq!(false, line_checker.check(&text));
 
-    let mut line_checker = LineChecker::new();
-    line_checker.add_rule(VowelRule::new(0));
+    let text = String::from("somethingxx");
     assert_eq!(true, line_checker.check(&text));
-
-    let text = String::from("(@S@DM(92da!!#X");
-    let mut line_checker = LineChecker::new();
-    line_checker.add_rule(VowelRule::new(1));
+    let text = String::from("xxsomething");
     assert_eq!(true, line_checker.check(&text));
+    let text = String::from("sometxxhing");
+    assert_eq!(true, line_checker.check(&text));
+    let text = String::from("xX");
+    assert_eq!(false, line_checker.check(&text));
 }
 
 impl ReccuringLettersRule {
@@ -109,6 +127,10 @@ struct ForbiddenCharsRule {
 }
 
 impl Rule for ForbiddenCharsRule {
+    /*
+    Checks if any of the following sequences are present in the string:
+    ab, cd, pq, xy
+    */
     fn process_char(&mut self, line: &String, index: usize, char: Byte) {
         //Skip first element as there's nothing to compare it against
         if index == 0 {
@@ -154,31 +176,6 @@ fn test_has_forbidden_sequences() {
     assert_eq!(true, line_checker.check(&text));
     let text = String::from("axyb");
     assert_eq!(false, line_checker.check(&text));
-}
-
-/*
-Checks if any of the following sequences are present in the string:
-ab, cd, pq, xy
-*/
-fn has_forbidden_sequences(text: &str) -> bool {
-    let suspicious_chars = [b'b', b'd', b'q', b'y'];
-    let text_as_bytes = text.as_bytes();
-
-    for (i, v) in text_as_bytes.iter().enumerate() {
-        //Skip first element as there's nothing to compare it against
-        if i == 0 {
-            continue;
-        }
-
-        if !suspicious_chars.contains(v) {
-            continue;
-        }
-
-        if text_as_bytes[i - 1] == v - 1 {
-            return true;
-        }
-    }
-    false
 }
 
 impl ForbiddenCharsRule {
@@ -271,7 +268,7 @@ fn main() {
         Err(e) => panic!("Error reading file: {e}"),
     };
 
-    let mut num_good_strings_original = 0;
+    // let mut num_good_strings_original = 0;
     let mut num_good_strings_modified = 0;
     for line in text.lines() {
         //Struct implementation
@@ -280,57 +277,38 @@ fn main() {
         }
 
         //Original implementation
-        if string_is_nice(&line) {
-            num_good_strings_original += 1;
-        }
+        // if string_is_nice(&line) {
+        //     num_good_strings_original += 1;
+        // }
     }
 
     println!("Num of good strings via struct: {num_good_strings_modified}");
-    println!("Num of good strings original: {num_good_strings_original}");
+    // println!("Num of good strings original: {num_good_strings_original}");
 }
 
-fn string_is_nice(text: &str) -> bool {
-    has_num_of_vowels(&text, 3)
-        && has_reoccuring_letters(&text, 2)
-        && !has_forbidden_sequences(&text)
-}
+// fn string_is_nice(text: &str) -> bool {
+//     has_num_of_vowels(&text, 3)
+//         && has_reoccuring_letters(&text, 2)
+//         && !has_forbidden_sequences(&text)
+// }
 
-#[test]
-fn test_string_is_nice() {
-    let text = String::from("ugknbfddgicrmopn");
-    assert_eq!(true, string_is_nice(&text));
+// #[test]
+// fn test_string_is_nice() {
+//     let text = String::from("ugknbfddgicrmopn");
+//     assert_eq!(true, string_is_nice(&text));
 
-    let text = String::from("aaa");
-    assert_eq!(true, string_is_nice(&text));
+//     let text = String::from("aaa");
+//     assert_eq!(true, string_is_nice(&text));
 
-    let text = String::from("jchzalrnumimnmhp");
-    assert_eq!(false, string_is_nice(&text));
+//     let text = String::from("jchzalrnumimnmhp");
+//     assert_eq!(false, string_is_nice(&text));
 
-    let text = String::from("haegwjzuvuyypxyu");
-    assert_eq!(false, string_is_nice(&text));
+//     let text = String::from("haegwjzuvuyypxyu");
+//     assert_eq!(false, string_is_nice(&text));
 
-    let text = String::from("dvszwmarrgswjxmb");
-    assert_eq!(false, string_is_nice(&text));
-}
-
-fn has_num_of_vowels(text: &str, threshold: u32) -> bool {
-    let vowels = [b'a', b'e', b'i', b'o', b'u'];
-
-    let mut num_vowels = 0;
-
-    for v in text.as_bytes().iter() {
-        if vowels.contains(v) {
-            num_vowels += 1;
-
-            if num_vowels >= threshold {
-                return true;
-            }
-        }
-    }
-
-    //Explicit return checker for case threshold = 0 nad vowels = 0
-    num_vowels == threshold
-}
+//     let text = String::from("dvszwmarrgswjxmb");
+//     assert_eq!(false, string_is_nice(&text));
+// }
 
 fn has_reoccuring_letters(text: &str, occurences_threshold: u32) -> bool {
     let text_as_bytes = text.as_bytes();
@@ -355,28 +333,4 @@ fn has_reoccuring_letters(text: &str, occurences_threshold: u32) -> bool {
         }
     }
     false
-}
-
-#[test]
-fn test_has_reoccuring_letters() {
-    let text = String::from("abcdefg");
-    assert_eq!(false, has_reoccuring_letters(&text, 2));
-    let text = String::from("somethingxx");
-    assert_eq!(true, has_reoccuring_letters(&text, 2));
-    let text = String::from("xxsomething");
-    assert_eq!(true, has_reoccuring_letters(&text, 2));
-    let text = String::from("sometxxhing");
-    assert_eq!(true, has_reoccuring_letters(&text, 2));
-    let text = String::from("xX");
-    assert_eq!(false, has_reoccuring_letters(&text, 2));
-}
-
-#[test]
-fn test_has_forbidden_sequences_original() {
-    let text = String::from("abcdefg");
-    assert_eq!(true, has_forbidden_sequences(&text));
-    let text = String::from("1111111");
-    assert_eq!(false, has_forbidden_sequences(&text));
-    let text = String::from("axyb");
-    assert_eq!(true, has_forbidden_sequences(&text));
 }
