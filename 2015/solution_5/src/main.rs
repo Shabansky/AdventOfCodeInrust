@@ -72,6 +72,28 @@ impl Rule for ReccuringLettersRule {
     }
 }
 
+#[test]
+fn test_has_num_of_vowels() {
+    let mut line_checker = LineChecker::new();
+    line_checker.add_rule(VowelRule::new(3));
+
+    let text = String::from("test");
+    assert_eq!(false, line_checker.check(&text));
+    let text = String::from("aaabcd");
+    assert_eq!(true, line_checker.check(&text));
+    let text = String::from("      ");
+    assert_eq!(false, line_checker.check(&text));
+
+    let mut line_checker = LineChecker::new();
+    line_checker.add_rule(VowelRule::new(0));
+    assert_eq!(true, line_checker.check(&text));
+
+    let text = String::from("(@S@DM(92da!!#X");
+    let mut line_checker = LineChecker::new();
+    line_checker.add_rule(VowelRule::new(1));
+    assert_eq!(true, line_checker.check(&text));
+}
+
 impl ReccuringLettersRule {
     fn new(threshold: u32) -> Self {
         Self {
@@ -308,19 +330,6 @@ fn has_num_of_vowels(text: &str, threshold: u32) -> bool {
 
     //Explicit return checker for case threshold = 0 nad vowels = 0
     num_vowels == threshold
-}
-
-#[test]
-fn test_has_num_of_vowels() {
-    let text = String::from("test");
-    assert_eq!(false, has_num_of_vowels(&text, 3));
-    let text = String::from("aaabcd");
-    assert_eq!(true, has_num_of_vowels(&text, 3));
-    let text = String::from("      ");
-    assert_eq!(false, has_num_of_vowels(&text, 3));
-    assert_eq!(true, has_num_of_vowels(&text, 0));
-    let text = String::from("(@S@DM(92da!!#X");
-    assert_eq!(true, has_num_of_vowels(&text, 1));
 }
 
 fn has_reoccuring_letters(text: &str, occurences_threshold: u32) -> bool {
