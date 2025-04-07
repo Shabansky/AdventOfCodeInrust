@@ -75,6 +75,10 @@ impl Rule for ReccuringLettersRule {
             return;
         }
 
+        if self.passes() {
+            return;
+        }
+
         if char != self.current_char {
             self.num_occurences = 1;
             self.current_char = char;
@@ -89,7 +93,7 @@ impl Rule for ReccuringLettersRule {
     }
 
     fn reset(&mut self) {
-        self.num_occurences = 0;
+        self.num_occurences = 1;
         self.current_char = 0;
     }
 }
@@ -259,9 +263,9 @@ impl LineChecker {
 
 fn main() {
     let mut line_checker = LineChecker::new();
-    line_checker.add_rule(VowelRule::new(3));
+    // line_checker.add_rule(VowelRule::new(3));
     line_checker.add_rule(ReccuringLettersRule::new(2));
-    line_checker.add_rule(ForbiddenCharsRule::new());
+    // line_checker.add_rule(ForbiddenCharsRule::new());
 
     let text = match fs::read_to_string("input.txt") {
         Ok(text) => text,
