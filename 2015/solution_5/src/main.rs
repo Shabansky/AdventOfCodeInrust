@@ -263,78 +263,21 @@ impl LineChecker {
 
 fn main() {
     let mut line_checker = LineChecker::new();
-    // line_checker.add_rule(VowelRule::new(3));
+    line_checker.add_rule(VowelRule::new(3));
     line_checker.add_rule(ReccuringLettersRule::new(2));
-    // line_checker.add_rule(ForbiddenCharsRule::new());
+    line_checker.add_rule(ForbiddenCharsRule::new());
 
     let text = match fs::read_to_string("input.txt") {
         Ok(text) => text,
         Err(e) => panic!("Error reading file: {e}"),
     };
 
-    // let mut num_good_strings_original = 0;
     let mut num_good_strings_modified = 0;
     for line in text.lines() {
-        //Struct implementation
         if line_checker.check(&String::from(line)) {
             num_good_strings_modified += 1;
         }
-
-        //Original implementation
-        // if string_is_nice(&line) {
-        //     num_good_strings_original += 1;
-        // }
     }
 
     println!("Num of good strings via struct: {num_good_strings_modified}");
-    // println!("Num of good strings original: {num_good_strings_original}");
-}
-
-// fn string_is_nice(text: &str) -> bool {
-//     has_num_of_vowels(&text, 3)
-//         && has_reoccuring_letters(&text, 2)
-//         && !has_forbidden_sequences(&text)
-// }
-
-// #[test]
-// fn test_string_is_nice() {
-//     let text = String::from("ugknbfddgicrmopn");
-//     assert_eq!(true, string_is_nice(&text));
-
-//     let text = String::from("aaa");
-//     assert_eq!(true, string_is_nice(&text));
-
-//     let text = String::from("jchzalrnumimnmhp");
-//     assert_eq!(false, string_is_nice(&text));
-
-//     let text = String::from("haegwjzuvuyypxyu");
-//     assert_eq!(false, string_is_nice(&text));
-
-//     let text = String::from("dvszwmarrgswjxmb");
-//     assert_eq!(false, string_is_nice(&text));
-// }
-
-fn has_reoccuring_letters(text: &str, occurences_threshold: u32) -> bool {
-    let text_as_bytes = text.as_bytes();
-    let mut current_char = text_as_bytes[0];
-    let mut occurences = 1;
-
-    for (i, v) in text_as_bytes.iter().enumerate() {
-        if i == 0 {
-            continue;
-        }
-
-        if *v != current_char {
-            occurences = 1;
-            current_char = *v;
-            continue;
-        }
-
-        occurences += 1;
-
-        if occurences == occurences_threshold {
-            return true;
-        }
-    }
-    false
 }
