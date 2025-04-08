@@ -13,6 +13,15 @@ struct VowelRule {
     num_vowels: u32,
 }
 
+impl VowelRule {
+    fn new(threshold: u32) -> Self {
+        Self {
+            threshold: threshold,
+            num_vowels: 0,
+        }
+    }
+}
+
 impl Rule for VowelRule {
     fn process_char(&mut self, _: &String, _: usize, char: Byte) {
         let vowels = [b'a', b'e', b'i', b'o', b'u'];
@@ -53,19 +62,20 @@ fn test_has_num_of_vowels() {
     assert_eq!(true, line_checker.check(&text));
 }
 
-impl VowelRule {
-    fn new(threshold: u32) -> Self {
-        Self {
-            threshold: threshold,
-            num_vowels: 0,
-        }
-    }
-}
-
 struct ReccuringLettersRule {
     num_occurences: u32,
     threshold: u32,
     current_char: u8,
+}
+
+impl ReccuringLettersRule {
+    fn new(threshold: u32) -> Self {
+        Self {
+            threshold: threshold,
+            num_occurences: 1,
+            current_char: 0,
+        }
+    }
 }
 
 impl Rule for ReccuringLettersRule {
@@ -116,18 +126,16 @@ fn test_has_reoccuring_letters() {
     assert_eq!(false, line_checker.check(&text));
 }
 
-impl ReccuringLettersRule {
-    fn new(threshold: u32) -> Self {
-        Self {
-            threshold: threshold,
-            num_occurences: 1,
-            current_char: 0,
-        }
-    }
-}
-
 struct ForbiddenCharsRule {
     is_forbidden: bool,
+}
+
+impl ForbiddenCharsRule {
+    fn new() -> Self {
+        ForbiddenCharsRule {
+            is_forbidden: false,
+        }
+    }
 }
 
 impl Rule for ForbiddenCharsRule {
@@ -180,14 +188,6 @@ fn test_has_forbidden_sequences() {
     assert_eq!(true, line_checker.check(&text));
     let text = String::from("axyb");
     assert_eq!(false, line_checker.check(&text));
-}
-
-impl ForbiddenCharsRule {
-    fn new() -> Self {
-        ForbiddenCharsRule {
-            is_forbidden: false,
-        }
-    }
 }
 
 struct RuleRow {
