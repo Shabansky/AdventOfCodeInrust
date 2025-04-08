@@ -160,7 +160,7 @@ impl Rule for ForbiddenCharsRule {
             return;
         }
 
-        let text_as_bytes = line.as_bytes();
+        let text_as_bytes = &line[..index].as_bytes();
         self.is_forbidden = if text_as_bytes[index - 1] == char - 1 {
             true
         } else {
@@ -215,7 +215,7 @@ impl Rule for RepeatWithGapRule {
             return;
         }
 
-        let line = line.as_bytes();
+        let line = &line[..index].as_bytes();
 
         let start_char = line[index - (self.gap + 1)];
 
