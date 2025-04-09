@@ -257,6 +257,88 @@ fn test_repeat_with_gap_rule() {
     assert_eq!(true, line_checker.check(&text));
 }
 
+struct HasPairsRule {
+    occurences: usize,
+    occurred: bool,
+}
+
+impl HasPairsRule {
+    fn new(occurences: usize) -> Self {
+        HasPairsRule {
+            occurences: occurences,
+            occurred: false,
+        }
+    }
+}
+
+impl Rule for HasPairsRule {
+    fn process_char(&mut self, line: &String, index: usize, _: Byte) {
+        if self.occurred == true {
+            return;
+        }
+
+        //Length needs to be at least as big as the required number of pairs
+        // let min_text_length: usize = 2 * self.occurences;
+        let min_text_length: usize = 4;
+        if index + 1 < min_text_length {
+            return;
+        }
+
+        let mut line_to_check = String::new();
+        let mut pair_to_check = String::new();
+
+        line[..index - 1].clone_into(&mut line_to_check);
+        line[index - 1..index + 1].clone_into(&mut pair_to_check);
+
+        if line_to_check.contains(&pair_to_check) {
+            self.occurred = true;
+        }
+
+        // while let Some(i) = line_to_check[..index - 1].find(&pair_to_check) {
+        //     self.occurences += 1;
+
+        //     let mut second_part = line_to_check.split_off(i);
+        //     let remaining = second_part.split_off(2);
+        //     line_to_check.push_str(&remaining);
+        // }
+    }
+
+    fn passes(&self) -> bool {
+        self.occurred == true
+    }
+
+    fn reset(&mut self) {
+        self.occurences = 0;
+        self.occurred = false;
+    }
+}
+
+#[test]
+fn test_has_pairs_rule() {
+    let mut line_checker = LineChecker::new();
+    line_checker.add_rule(HasPairsRule::new(1));
+
+    // Test case: No pairs
+    let text = String::from("abcdefg");
+    assert_eq!(false, line_checker.check(&text));
+
+    // Test case: Empty string
+    let text = String::from("");
+    assert_eq!(false, line_checker.check(&text));
+
+    // Test case: Overlapping pairs. Not allowed
+    let text = String::from("aaa");
+    assert_eq!(false, line_checker.check(&text));
+
+    // Test case: Pairs one next to another
+    let text = String::from("xyxy");
+    assert_eq!(true, line_checker.check(&text));
+
+    // Test case: Pairs separated
+    let text = String::from("aabcdefgaa");
+    assert_eq!(true, line_checker.check(&text));
+}
+
 struct RuleRow {
     rule: Box<dyn Rule>,
     passed: bool,
@@ -330,9 +412,8 @@ impl LineChecker {
 
 fn main() {
     let mut line_checker = LineChecker::new();
-    line_checker.add_rule(VowelRule::new(3));
-    line_checker.add_rule(ReccuringLettersRule::new(2));
-    line_checker.add_rule(ForbiddenCharsRule::new());
+    line_checker.add_rule(HasPairsRule::new(1));
+    line_checker.add_rule(RepeatWithGapRule::new(1));
 
     let text = match fs::read_to_string("input.txt") {
         Ok(text) => text,
@@ -347,4 +428,23 @@ fn main() {
     }
 
     println!("Num of good strings via struct: {num_good_strings_modified}");
+}
+
+#[test]
+fn test_is_good_string() {
+    let mut line_checker = LineChecker::new();
+    line_checker.add_rule(RepeatWithGapRule::new(1));
+    line_checker.add_rule(HasPairsRule::new(1));
+
+    let text = String::from("qjhvhtzxzqqjkmpb");
+    assert_eq!(true, line_checker.check(&text));
+
+    let text = String::from("xxyxx");
+    assert_eq!(true, line_checker.check(&text));
+
+    let text = String::from("uurcxstgmygtbstg");
+    assert_eq!(false, line_checker.check(&text));
+
+    let text = String::from("ieodomkazucvgmuy");
+    assert_eq!(false, line_checker.check(&text));
 }
