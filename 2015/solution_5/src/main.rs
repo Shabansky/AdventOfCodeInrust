@@ -367,12 +367,12 @@ impl LineChecker {
 
     fn check(&mut self, text: &String) -> bool {
         self.line = text.to_string();
+        self.reset_rules();
         for (index, char) in text.as_bytes().iter().enumerate() {
             self.run_rules_on_byte(index, *char);
         }
 
         let is_good_string = self.is_good_string();
-        self.reset_rules();
 
         is_good_string
     }
