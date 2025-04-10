@@ -277,30 +277,18 @@ impl Rule for HasPairsRule {
             return;
         }
 
-        //Length needs to be at least as big as the required number of pairs
-        // let min_text_length: usize = 2 * self.occurences;
+        //Length needs to be at least two pairs in size to make any sense
         let min_text_length: usize = 4;
         if index + 1 < min_text_length {
             return;
         }
 
-        let mut line_to_check = String::new();
-        let mut pair_to_check = String::new();
-
-        line[..index - 1].clone_into(&mut line_to_check);
-        line[index - 1..index + 1].clone_into(&mut pair_to_check);
+        let line_to_check = &line[..index - 1];
+        let pair_to_check = &line[index - 1..=index];
 
         if line_to_check.contains(&pair_to_check) {
             self.occurred = true;
         }
-
-        // while let Some(i) = line_to_check[..index - 1].find(&pair_to_check) {
-        //     self.occurences += 1;
-
-        //     let mut second_part = line_to_check.split_off(i);
-        //     let remaining = second_part.split_off(2);
-        //     line_to_check.push_str(&remaining);
-        // }
     }
 
     fn passes(&self) -> bool {
