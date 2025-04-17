@@ -1,12 +1,6 @@
 use std::fs;
 
-type Byte = u8;
-
-trait Rule {
-    fn process_char(&mut self, line: &String, index: usize, char: Byte);
-    fn passes(&self) -> bool;
-    fn reset(&mut self);
-}
+mod helpers;
 
 struct VowelRule {
     threshold: u32,
@@ -22,8 +16,8 @@ impl VowelRule {
     }
 }
 
-impl Rule for VowelRule {
-    fn process_char(&mut self, _: &String, _: usize, char: Byte) {
+impl helpers::Rule for VowelRule {
+    fn process_char(&mut self, _: &String, _: usize, char: helpers::Byte) {
         let vowels = [b'a', b'e', b'i', b'o', b'u'];
 
         if vowels.contains(&char) {
@@ -78,8 +72,8 @@ impl ReccuringLettersRule {
     }
 }
 
-impl Rule for ReccuringLettersRule {
-    fn process_char(&mut self, _: &String, index: usize, char: Byte) {
+impl helpers::Rule for ReccuringLettersRule {
+    fn process_char(&mut self, _: &String, index: usize, char: helpers::Byte) {
         if index == 0 {
             self.current_char = char;
             return;
@@ -138,12 +132,12 @@ impl ForbiddenCharsRule {
     }
 }
 
-impl Rule for ForbiddenCharsRule {
+impl helpers::Rule for ForbiddenCharsRule {
     /*
     Checks if any of the following sequences are present in the string:
     ab, cd, pq, xy
     */
-    fn process_char(&mut self, line: &String, index: usize, char: Byte) {
+    fn process_char(&mut self, line: &String, index: usize, char: helpers::Byte) {
         //Skip first element as there's nothing to compare it against
         if index == 0 {
             return;
@@ -204,8 +198,8 @@ impl RepeatWithGapRule {
     }
 }
 
-impl Rule for RepeatWithGapRule {
-    fn process_char(&mut self, line: &String, index: usize, char: Byte) {
+impl helpers::Rule for RepeatWithGapRule {
+    fn process_char(&mut self, line: &String, index: usize, char: helpers::Byte) {
         if self.occurred == true {
             return;
         }
@@ -271,8 +265,8 @@ impl HasPairsRule {
     }
 }
 
-impl Rule for HasPairsRule {
-    fn process_char(&mut self, line: &String, index: usize, _: Byte) {
+impl helpers::Rule for HasPairsRule {
+    fn process_char(&mut self, line: &String, index: usize, _: helpers::Byte) {
         if self.occurred == true {
             return;
         }
@@ -328,7 +322,7 @@ fn test_has_pairs_rule() {
 }
 
 struct RuleRow {
-    rule: Box<dyn Rule>,
+    rule: Box<dyn helpers::Rule>,
     passed: bool,
 }
 
@@ -339,7 +333,7 @@ struct LineChecker {
 
 impl LineChecker {
     //TODO: Why is the + 'static' needed here?
-    fn add_rule<T: Rule + 'static>(&mut self, rule: T) {
+    fn add_rule<T: helpers::Rule + 'static>(&mut self, rule: T) {
         self.rules.push(RuleRow {
             rule: Box::new(rule),
             passed: false,
@@ -365,7 +359,7 @@ impl LineChecker {
         is_good_string
     }
 
-    fn run_rules_on_byte(&mut self, index: usize, char: Byte) {
+    fn run_rules_on_byte(&mut self, index: usize, char: helpers::Byte) {
         for rule_row in &mut self.rules {
             let rule = &mut rule_row.rule;
             rule.process_char(&self.line, index, char);
