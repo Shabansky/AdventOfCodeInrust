@@ -1,7 +1,7 @@
 use std::fs;
 
 mod helpers;
-
+mod line_checker;
 struct VowelRule {
     threshold: u32,
     num_vowels: u32,
@@ -36,7 +36,7 @@ impl helpers::Rule for VowelRule {
 
 #[test]
 fn test_has_num_of_vowels() {
-    let mut line_checker = LineChecker::new();
+    let mut line_checker = line_checker::LineChecker::new();
     line_checker.add_rule(VowelRule::new(3));
 
     let text = String::from("test");
@@ -46,12 +46,12 @@ fn test_has_num_of_vowels() {
     let text = String::from("      ");
     assert_eq!(false, line_checker.check(&text));
 
-    let mut line_checker = LineChecker::new();
+    let mut line_checker = line_checker::LineChecker::new();
     line_checker.add_rule(VowelRule::new(0));
     assert_eq!(true, line_checker.check(&text));
 
     let text = String::from("(@S@DM(92da!!#X");
-    let mut line_checker = LineChecker::new();
+    let mut line_checker = line_checker::LineChecker::new();
     line_checker.add_rule(VowelRule::new(1));
     assert_eq!(true, line_checker.check(&text));
 }
@@ -104,7 +104,7 @@ impl helpers::Rule for ReccuringLettersRule {
 
 #[test]
 fn test_has_reoccuring_letters() {
-    let mut line_checker = LineChecker::new();
+    let mut line_checker = line_checker::LineChecker::new();
     line_checker.add_rule(ReccuringLettersRule::new(2));
 
     let text = String::from("abcdefg");
@@ -173,7 +173,7 @@ impl helpers::Rule for ForbiddenCharsRule {
 
 #[test]
 fn test_has_forbidden_sequences() {
-    let mut line_checker = LineChecker::new();
+    let mut line_checker = line_checker::LineChecker::new();
     line_checker.add_rule(ForbiddenCharsRule::new());
 
     let text = String::from("abcdefg");
@@ -229,7 +229,7 @@ impl helpers::Rule for RepeatWithGapRule {
 
 #[test]
 fn test_repeat_with_gap_rule() {
-    let mut line_checker = LineChecker::new();
+    let mut line_checker = line_checker::LineChecker::new();
     line_checker.add_rule(RepeatWithGapRule::new(1));
 
     let text = String::from("");
@@ -244,7 +244,7 @@ fn test_repeat_with_gap_rule() {
     let text = String::from("aaa");
     assert_eq!(true, line_checker.check(&text));
 
-    let mut line_checker = LineChecker::new();
+    let mut line_checker = line_checker::LineChecker::new();
     line_checker.add_rule(RepeatWithGapRule::new(3));
 
     let text = String::from("xaaax");
@@ -297,7 +297,7 @@ impl helpers::Rule for HasPairsRule {
 
 #[test]
 fn test_has_pairs_rule() {
-    let mut line_checker = LineChecker::new();
+    let mut line_checker = line_checker::LineChecker::new();
     line_checker.add_rule(HasPairsRule::new(1));
 
     // Test case: No pairs
@@ -321,79 +321,8 @@ fn test_has_pairs_rule() {
     assert_eq!(true, line_checker.check(&text));
 }
 
-struct RuleRow {
-    rule: Box<dyn helpers::Rule>,
-    passed: bool,
-}
-
-struct LineChecker {
-    line: String,
-    rules: Vec<RuleRow>,
-}
-
-impl LineChecker {
-    //TODO: Why is the + 'static' needed here?
-    fn add_rule<T: helpers::Rule + 'static>(&mut self, rule: T) {
-        self.rules.push(RuleRow {
-            rule: Box::new(rule),
-            passed: false,
-        });
-    }
-
-    fn new() -> Self {
-        Self {
-            line: String::from(""),
-            rules: vec![],
-        }
-    }
-
-    fn check(&mut self, text: &String) -> bool {
-        self.line = text.to_string();
-        self.reset_rules();
-        for (index, char) in text.as_bytes().iter().enumerate() {
-            self.run_rules_on_byte(index, *char);
-        }
-
-        let is_good_string = self.is_good_string();
-
-        is_good_string
-    }
-
-    fn run_rules_on_byte(&mut self, index: usize, char: helpers::Byte) {
-        for rule_row in &mut self.rules {
-            let rule = &mut rule_row.rule;
-            rule.process_char(&self.line, index, char);
-            if rule.passes() {
-                rule_row.passed = true;
-            } else {
-                rule_row.passed = false;
-            }
-        }
-    }
-
-    fn is_good_string(&mut self) -> bool {
-        let mut is_good = true;
-
-        for rule_row in self.rules.iter() {
-            if rule_row.passed == false {
-                is_good = false;
-                break;
-            }
-        }
-
-        is_good
-    }
-
-    fn reset_rules(&mut self) {
-        for rule_row in self.rules.iter_mut() {
-            rule_row.passed = false;
-            rule_row.rule.reset();
-        }
-    }
-}
-
 fn main() {
-    let mut line_checker = LineChecker::new();
+    let mut line_checker = line_checker::LineChecker::new();
     line_checker.add_rule(HasPairsRule::new(1));
     line_checker.add_rule(RepeatWithGapRule::new(1));
 
@@ -414,7 +343,7 @@ fn main() {
 
 #[test]
 fn test_is_good_string() {
-    let mut line_checker = LineChecker::new();
+    let mut line_checker = line_checker::LineChecker::new();
     line_checker.add_rule(RepeatWithGapRule::new(1));
     line_checker.add_rule(HasPairsRule::new(1));
 
