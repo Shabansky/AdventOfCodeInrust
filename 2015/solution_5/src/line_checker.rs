@@ -1,6 +1,7 @@
-use crate::helpers;
+use crate::helpers::Byte;
+use crate::helpers::Rule;
 struct RuleRow {
-    rule: Box<dyn helpers::Rule>,
+    rule: Box<dyn Rule>,
     passed: bool,
 }
 
@@ -11,7 +12,7 @@ pub struct LineChecker {
 
 impl LineChecker {
     //TODO: Why is the + 'static' needed here?
-    pub fn add_rule<T: helpers::Rule + 'static>(&mut self, rule: T) {
+    pub fn add_rule<T: Rule + 'static>(&mut self, rule: T) {
         self.rules.push(RuleRow {
             rule: Box::new(rule),
             passed: false,
@@ -37,7 +38,7 @@ impl LineChecker {
         is_good_string
     }
 
-    fn run_rules_on_byte(&mut self, index: usize, char: helpers::Byte) {
+    fn run_rules_on_byte(&mut self, index: usize, char: Byte) {
         for rule_row in &mut self.rules {
             let rule = &mut rule_row.rule;
             rule.process_char(&self.line, index, char);
