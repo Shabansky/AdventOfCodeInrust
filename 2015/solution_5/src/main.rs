@@ -1,14 +1,11 @@
 use std::fs;
 
-mod forbidden_chars_rule;
 mod helpers;
 mod line_checker;
-mod repeat_with_gap_rule;
+mod rules;
 
-use has_pairs_rule::HasPairsRule;
-use repeat_with_gap_rule::RepeatWithGapRule;
-
-mod has_pairs_rule;
+use rules::has_pairs::HasPairsRule;
+use rules::repeat_with_gap::RepeatWithGapRule;
 
 fn main() {
     let mut line_checker = line_checker::LineChecker::new();
