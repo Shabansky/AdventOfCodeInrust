@@ -28,6 +28,18 @@ impl Default for Light {
     }
 }
 
+struct SquareMap {
+    fields: Vec<Vec<Light>>,
+}
+
+impl SquareMap {
+    fn new(side: usize) -> Self {
+        Self {
+            fields: vec![vec![Light::default(); side]; side],
+        }
+    }
+}
+
 impl Display for Light {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.state {
@@ -79,21 +91,20 @@ impl ActionRectangleSelection {
 
 fn main() {
     //Map allocated on heap via vec as a 1000x1000 on an array will exceed the stack memory limit.
-    let mut map = build_map();
+    let mut map = SquareMap::new(SQUARE_SIDE);
     let action = ActionRectangleSelection::new(
         Coordinate::new(2, 3),
         Coordinate::new(5, 5),
         Actions::TurnOn,
     );
 
-    for row in &map {
+    for row in &map.fields {
         for light in row {
             print!("{light}");
         }
         println!();
     }
-
-    for row in &mut map[action.get_height()] {
+    for row in &mut map.fields[action.get_height()] {
         for light in &mut row[action.get_width()] {
             light.state = LightState::Lit;
         }
@@ -101,14 +112,10 @@ fn main() {
 
     println!();
 
-    for row in &map {
+    for row in &map.fields {
         for light in row {
             print!("{light}");
         }
         println!(" ");
     }
-}
-
-fn build_map() -> Vec<Vec<Light>> {
-    vec![vec![Light::default(); SQUARE_SIDE]; SQUARE_SIDE]
 }
