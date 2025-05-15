@@ -68,6 +68,17 @@ impl SquareMap {
     }
 }
 
+impl Display for SquareMap {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Ok(for row in &self.fields {
+            for light in row {
+                write!(f, "{light}");
+            }
+            println!();
+        })
+    }
+}
+
 impl Display for Light {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.state {
@@ -123,24 +134,8 @@ fn main() {
     let action =
         ActionRectangleSelection::new(Coordinate::new(2, 3), Coordinate::new(5, 5), Action::TurnOn);
 
-    for row in &map.fields {
-        for light in row {
-            print!("{light}");
-        }
-        println!();
-    }
-    for row in &mut map.fields[action.get_height()] {
-        for light in &mut row[action.get_width()] {
-            light.state = LightState::Lit;
-        }
-    }
+    println!("{map}");
 
-    println!();
-
-    for row in &map.fields {
-        for light in row {
-            print!("{light}");
-        }
-        println!(" ");
-    }
+    map.apply(action);
+    println!("{map}");
 }
