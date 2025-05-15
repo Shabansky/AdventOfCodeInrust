@@ -1,5 +1,6 @@
 use std::default::Default;
 use std::fmt::Display;
+use std::ops::Range;
 
 const SQUARE_SIDE: usize = 10;
 
@@ -36,14 +37,54 @@ impl Display for Light {
     }
 }
 
+enum Actions {
+    TurnOn,
+    TurnOff,
+    Toggle,
+}
+
+struct Coordinate {
+    x: usize,
+    y: usize,
+}
+
+impl Coordinate {
+    fn new(x: usize, y: usize) -> Self {
+        Self { x, y }
+    }
+}
+struct ActionRectangleSelection {
+    origin: Coordinate,
+    destination: Coordinate,
+    action: Actions,
+}
+
+impl ActionRectangleSelection {
+    fn new(origin: Coordinate, destination: Coordinate, action: Actions) -> Self {
+        Self {
+            origin,
+            destination,
+            action,
+        }
+    }
+
+    fn get_width(&self) -> Range<usize> {
+        self.origin.x..self.destination.x
+    }
+
+    fn get_height(&self) -> Range<usize> {
+        self.origin.y..self.destination.y
+    }
+}
+
 fn main() {
     //Map allocated on heap via vec as a 1000x1000 on an array will exceed the stack memory limit.
     let mut map = build_map();
-    let coords = ((2, 3), (5, 5));
-    let y_low = coords.0 .1;
-    let y_diff = coords.1 .1 - coords.0 .1;
-    let x_low = coords.0 .0;
-    let x_diff = coords.1 .0 - coords.0 .0;
+    let action = ActionRectangleSelection::new(
+        Coordinate::new(2, 3),
+        Coordinate::new(5, 5),
+        Actions::TurnOn,
+    );
 
     for row in &map {
         for light in row {
@@ -52,8 +93,8 @@ fn main() {
         println!();
     }
 
-    for row in &mut map[y_low..(y_low + y_diff)] {
-        for light in &mut row[x_low..(x_low + x_diff)] {
+    for row in &mut map[action.get_height()] {
+        for light in &mut row[action.get_width()] {
             light.state = LightState::Lit;
         }
     }
