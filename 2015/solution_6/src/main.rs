@@ -4,7 +4,7 @@ use std::ops::Range;
 
 const SQUARE_SIDE: usize = 10;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 enum LightState {
     Lit,
     Unlit,
@@ -18,6 +18,22 @@ impl Light {
     fn new() -> Self {
         Light {
             state: LightState::Unlit,
+        }
+    }
+
+    fn turn_on(&mut self) {
+        self.state = LightState::Lit;
+    }
+
+    fn turn_off(&mut self) {
+        self.state = LightState::Unlit;
+    }
+
+    fn toggle(&mut self) {
+        if self.state == LightState::Unlit {
+            self.state = LightState::Lit;
+        } else {
+            self.state = LightState::Unlit;
         }
     }
 }
@@ -38,6 +54,18 @@ impl SquareMap {
             fields: vec![vec![Light::default(); side]; side],
         }
     }
+
+    fn apply(&mut self, action: ActionRectangleSelection) {
+        for row in &mut self.fields[action.get_height()] {
+            for light in &mut row[action.get_width()] {
+                match action.action {
+                    Action::TurnOn => light.turn_on(),
+                    Action::TurnOff => light.turn_off(),
+                    Action::Toggle => light.toggle(),
+                }
+            }
+        }
+    }
 }
 
 impl Display for Light {
@@ -49,7 +77,7 @@ impl Display for Light {
     }
 }
 
-enum Actions {
+enum Action {
     TurnOn,
     TurnOff,
     Toggle,
@@ -68,11 +96,11 @@ impl Coordinate {
 struct ActionRectangleSelection {
     origin: Coordinate,
     destination: Coordinate,
-    action: Actions,
+    action: Action,
 }
 
 impl ActionRectangleSelection {
-    fn new(origin: Coordinate, destination: Coordinate, action: Actions) -> Self {
+    fn new(origin: Coordinate, destination: Coordinate, action: Action) -> Self {
         Self {
             origin,
             destination,
@@ -92,11 +120,8 @@ impl ActionRectangleSelection {
 fn main() {
     //Map allocated on heap via vec as a 1000x1000 on an array will exceed the stack memory limit.
     let mut map = SquareMap::new(SQUARE_SIDE);
-    let action = ActionRectangleSelection::new(
-        Coordinate::new(2, 3),
-        Coordinate::new(5, 5),
-        Actions::TurnOn,
-    );
+    let action =
+        ActionRectangleSelection::new(Coordinate::new(2, 3), Coordinate::new(5, 5), Action::TurnOn);
 
     for row in &map.fields {
         for light in row {
