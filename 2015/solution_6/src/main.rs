@@ -1,6 +1,7 @@
 use std::default::Default;
 use std::fmt::Display;
 use std::ops::Range;
+use std::str::FromStr;
 
 const SQUARE_SIDE: usize = 10;
 
@@ -125,6 +126,15 @@ impl ActionRectangleSelection {
 
     fn get_height(&self) -> Range<usize> {
         self.origin.y..self.destination.y
+    }
+}
+
+impl FromStr for ActionRectangleSelection {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        //turn on 0,0 through 999,999
+        todo!();
     }
 }
 
