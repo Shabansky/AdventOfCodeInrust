@@ -1,3 +1,4 @@
+use regex::Regex;
 use std::default::Default;
 use std::fmt::Display;
 use std::ops::Range;
@@ -89,12 +90,14 @@ impl Display for Light {
     }
 }
 
+#[derive(Debug)]
 enum Action {
     TurnOn,
     TurnOff,
     Toggle,
 }
 
+#[derive(Debug)]
 struct Coordinate {
     x: usize,
     y: usize,
@@ -105,6 +108,8 @@ impl Coordinate {
         Self { x, y }
     }
 }
+
+#[derive(Debug)]
 struct ActionRectangleSelection {
     origin: Coordinate,
     destination: Coordinate,
@@ -134,7 +139,28 @@ impl FromStr for ActionRectangleSelection {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         //turn on 0,0 through 999,999
-        todo!();
+        let regex = Regex::new(r"(.+)\s(\d+,\d+) through (\d+,\d+)").unwrap();
+
+        let Some(captures) = regex.captures(s) else {
+            return Err("No matches in input string".to_string());
+        };
+
+        if captures.len() != 4 {
+            return Err("Input does not have all the needed information".to_string());
+        }
+
+        println!("{captures:#?}");
+
+        //Check for action
+        let action = match captures[1].as_ref() {
+            "turn on" => Action::TurnOn,
+            "turn off" => Action::TurnOff,
+            "toggle" => Action::Toggle,
+            _ => return Err("Invalid action specified".to_string()),
+        };
+        let origin = Coordinate::new(0, 0);
+        let dest = Coordinate::new(999, 999);
+        Ok(Self::new(origin, dest, action))
     }
 }
 
@@ -148,4 +174,7 @@ fn main() {
 
     map.apply(action);
     println!("{map}");
+
+    let action = ActionRectangleSelection::from_str("turn on 0,0 through 999,999");
+    println!("{action:?}");
 }
