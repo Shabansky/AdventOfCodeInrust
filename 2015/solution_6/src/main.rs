@@ -1,7 +1,7 @@
 use regex::Regex;
 use std::default::Default;
 use std::fmt::Display;
-use std::ops::Range;
+use std::ops::RangeInclusive;
 use std::str::FromStr;
 
 const SQUARE_SIDE: usize = 10;
@@ -150,12 +150,12 @@ impl ActionRectangleSelection {
         }
     }
 
-    fn get_width(&self) -> Range<usize> {
-        self.coordinates.origin.x..self.coordinates.destination.x
+    fn get_width(&self) -> RangeInclusive<usize> {
+        self.coordinates.origin.x..=self.coordinates.destination.x
     }
 
-    fn get_height(&self) -> Range<usize> {
-        self.coordinates.origin.y..self.coordinates.destination.y
+    fn get_height(&self) -> RangeInclusive<usize> {
+        self.coordinates.origin.y..=self.coordinates.destination.y
     }
 }
 
