@@ -187,7 +187,7 @@ impl FromStr for ActionRectangleSelection {
         let origin = Coordinate::new(0, 0);
         let dest = Coordinate::new(9, 9);
         match SequentialCoordinates::try_from((origin, dest)) {
-            Err(_) => return Err("Origin coordinate cannot be larger than destination coordinate"),
+            Err(_) => Err("Origin coordinate cannot be larger than destination coordinate"),
             Ok(coordinates) => Ok(Self::new(coordinates, action)),
         }
     }
