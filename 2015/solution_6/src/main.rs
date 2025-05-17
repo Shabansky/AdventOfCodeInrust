@@ -6,6 +6,10 @@ use std::str::FromStr;
 
 const SQUARE_SIDE: usize = 10;
 
+enum Errors {
+    OriginLargetDestination,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 enum LightState {
     Lit,
@@ -72,12 +76,13 @@ impl SquareMap {
 
 impl Display for SquareMap {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        Ok(for row in &self.fields {
+        for row in &self.fields {
             for light in row {
                 write!(f, "{light}");
             }
-            println!();
-        })
+            writeln!(f);
+        }
+        Ok(())
     }
 }
 
@@ -110,43 +115,63 @@ impl Coordinate {
 }
 
 #[derive(Debug)]
-struct ActionRectangleSelection {
+struct SequentialCoordinates {
     origin: Coordinate,
     destination: Coordinate,
+}
+
+impl TryFrom<(Coordinate, Coordinate)> for SequentialCoordinates {
+    type Error = Errors;
+
+    fn try_from(coordinates: (Coordinate, Coordinate)) -> Result<Self, Self::Error> {
+        let (origin, destination) = coordinates;
+        if origin.x > destination.x || origin.y > destination.y {
+            Err(Errors::OriginLargetDestination)
+        } else {
+            Ok(SequentialCoordinates {
+                origin,
+                destination,
+            })
+        }
+    }
+}
+
+#[derive(Debug)]
+struct ActionRectangleSelection {
+    coordinates: SequentialCoordinates,
     action: Action,
 }
 
 impl ActionRectangleSelection {
-    fn new(origin: Coordinate, destination: Coordinate, action: Action) -> Self {
+    fn new(coordinates: SequentialCoordinates, action: Action) -> Self {
         Self {
-            origin,
-            destination,
+            coordinates,
             action,
         }
     }
 
     fn get_width(&self) -> Range<usize> {
-        self.origin.x..self.destination.x
+        self.coordinates.origin.x..self.coordinates.destination.x
     }
 
     fn get_height(&self) -> Range<usize> {
-        self.origin.y..self.destination.y
+        self.coordinates.origin.y..self.coordinates.destination.y
     }
 }
 
 impl FromStr for ActionRectangleSelection {
-    type Err = String;
+    type Err = &'static str;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         //turn on 0,0 through 999,999
         let regex = Regex::new(r"(.+)\s(\d+,\d+) through (\d+,\d+)").unwrap();
 
         let Some(captures) = regex.captures(s) else {
-            return Err("No matches in input string".to_string());
+            return Err("No matches in input string");
         };
 
         if captures.len() != 4 {
-            return Err("Input does not have all the needed information".to_string());
+            return Err("Input does not have all the needed information");
         }
 
         println!("{captures:#?}");
@@ -156,25 +181,33 @@ impl FromStr for ActionRectangleSelection {
             "turn on" => Action::TurnOn,
             "turn off" => Action::TurnOff,
             "toggle" => Action::Toggle,
-            _ => return Err("Invalid action specified".to_string()),
+            _ => return Err("Invalid action specified"),
         };
+        //TODO: Get origin and dest from string
         let origin = Coordinate::new(0, 0);
-        let dest = Coordinate::new(999, 999);
-        Ok(Self::new(origin, dest, action))
+        let dest = Coordinate::new(9, 9);
+        match SequentialCoordinates::try_from((origin, dest)) {
+            Err(_) => return Err("Origin coordinate cannot be larger than destination coordinate"),
+            Ok(coordinates) => Ok(Self::new(coordinates, action)),
+        }
     }
 }
 
 fn main() {
     //Map allocated on heap via vec as a 1000x1000 on an array will exceed the stack memory limit.
     let mut map = SquareMap::new(SQUARE_SIDE);
-    let action =
-        ActionRectangleSelection::new(Coordinate::new(2, 3), Coordinate::new(5, 5), Action::TurnOn);
 
     println!("{map}");
 
+    let action: ActionRectangleSelection =
+        match ActionRectangleSelection::from_str("turn on 0,0 through 9,9") {
+            Ok(action) => action,
+            Err(e) => {
+                eprintln!("{e}");
+                return;
+            }
+        };
+    println!("{action:?}");
     map.apply(action);
     println!("{map}");
-
-    let action = ActionRectangleSelection::from_str("turn on 0,0 through 999,999");
-    println!("{action:?}");
 }
