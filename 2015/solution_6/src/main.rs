@@ -183,9 +183,21 @@ impl FromStr for ActionRectangleSelection {
             "toggle" => Action::Toggle,
             _ => return Err("Invalid action specified"),
         };
+
+        //TODO: Transfer this to a Coordinate::fromStr()
+        let mut origin = captures[2].split(',');
+        let x = origin.next().unwrap().parse::<usize>().unwrap();
+        let y = origin.next().unwrap().parse::<usize>().unwrap();
         //TODO: Get origin and dest from string
-        let origin = Coordinate::new(0, 0);
-        let dest = Coordinate::new(9, 9);
+        let origin = Coordinate::new(x, y);
+
+        let mut dest = captures[3].split(',');
+        let x = dest.next().unwrap().parse::<usize>().unwrap();
+        let y = dest.next().unwrap().parse::<usize>().unwrap();
+        //TODO: Get origin and dest from string
+        let dest = Coordinate::new(x, y);
+
+        //        let dest = Coordinate::new(9, 9);
         match SequentialCoordinates::try_from((origin, dest)) {
             Err(_) => Err("Origin coordinate cannot be larger than destination coordinate"),
             Ok(coordinates) => Ok(Self::new(coordinates, action)),
@@ -200,7 +212,7 @@ fn main() {
     println!("{map}");
 
     let action: ActionRectangleSelection =
-        match ActionRectangleSelection::from_str("turn on 0,0 through 9,9") {
+        match ActionRectangleSelection::from_str("turn on 3,5 through 9,9") {
             Ok(action) => action,
             Err(e) => {
                 eprintln!("{e}");
