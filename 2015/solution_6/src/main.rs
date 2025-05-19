@@ -4,6 +4,7 @@ use std::fmt::Display;
 use std::ops::RangeInclusive;
 use std::str::FromStr;
 
+//Map allocated on heap via vec as a 1000x1000 on an array will exceed the stack memory limit.
 const SQUARE_SIDE: usize = 10;
 
 enum Errors {
@@ -42,6 +43,10 @@ impl Light {
             self.state = LightState::Unlit;
         }
     }
+
+    fn is_on(&self) -> bool {
+        self.state == LightState::Lit
+    }
 }
 
 impl Default for Light {
@@ -71,6 +76,14 @@ impl SquareMap {
                 }
             }
         }
+    }
+
+    fn num_lights(&self) -> usize {
+        self.fields
+            .iter()
+            .flatten()
+            .filter(|light| light.is_on())
+            .count()
     }
 }
 
@@ -208,7 +221,6 @@ impl FromStr for ActionRectangleSelection {
 }
 
 fn main() {
-    //Map allocated on heap via vec as a 1000x1000 on an array will exceed the stack memory limit.
     let mut map = SquareMap::new(SQUARE_SIDE);
 
     println!("{map}");
@@ -223,5 +235,6 @@ fn main() {
         };
     println!("{action:?}");
     map.apply(action);
+    println!("COUNT: {}", map.num_lights());
     println!("{map}");
 }
