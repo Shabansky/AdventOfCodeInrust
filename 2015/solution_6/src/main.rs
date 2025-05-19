@@ -78,9 +78,9 @@ impl Display for SquareMap {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for row in &self.fields {
             for light in row {
-                write!(f, "{light}");
+                write!(f, "{light} ")?;
             }
-            writeln!(f);
+            writeln!(f)?;
         }
         Ok(())
     }
@@ -111,6 +111,17 @@ struct Coordinate {
 impl Coordinate {
     fn new(x: usize, y: usize) -> Self {
         Self { x, y }
+    }
+}
+
+impl TryFrom<&str> for Coordinate {
+    type Error = &'static str;
+
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
+        let mut coords = s.split(',');
+        let x = coords.next().unwrap().parse::<usize>().unwrap();
+        let y = coords.next().unwrap().parse::<usize>().unwrap();
+        Ok(Coordinate::new(x, y))
     }
 }
 
@@ -184,18 +195,9 @@ impl FromStr for ActionRectangleSelection {
             _ => return Err("Invalid action specified"),
         };
 
-        //TODO: Transfer this to a Coordinate::fromStr()
-        let mut origin = captures[2].split(',');
-        let x = origin.next().unwrap().parse::<usize>().unwrap();
-        let y = origin.next().unwrap().parse::<usize>().unwrap();
-        //TODO: Get origin and dest from string
-        let origin = Coordinate::new(x, y);
+        let origin = Coordinate::try_from(&captures[2])?;
 
-        let mut dest = captures[3].split(',');
-        let x = dest.next().unwrap().parse::<usize>().unwrap();
-        let y = dest.next().unwrap().parse::<usize>().unwrap();
-        //TODO: Get origin and dest from string
-        let dest = Coordinate::new(x, y);
+        let dest = Coordinate::try_from(&captures[3])?;
 
         //        let dest = Coordinate::new(9, 9);
         match SequentialCoordinates::try_from((origin, dest)) {
