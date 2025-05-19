@@ -1,11 +1,12 @@
 use regex::Regex;
 use std::default::Default;
 use std::fmt::Display;
+use std::fs;
 use std::ops::RangeInclusive;
 use std::str::FromStr;
 
 //Map allocated on heap via vec as a 1000x1000 on an array will exceed the stack memory limit.
-const SQUARE_SIDE: usize = 10;
+const SQUARE_SIDE: usize = 1000;
 
 enum Errors {
     OriginLargetDestination,
@@ -197,9 +198,6 @@ impl FromStr for ActionRectangleSelection {
         if captures.len() != 4 {
             return Err("Input does not have all the needed information");
         }
-
-        println!("{captures:#?}");
-
         //Check for action
         let action = match captures[1].as_ref() {
             "turn on" => Action::TurnOn,
@@ -223,18 +221,28 @@ impl FromStr for ActionRectangleSelection {
 fn main() {
     let mut map = SquareMap::new(SQUARE_SIDE);
 
-    println!("{map}");
+    let file_path = "input.txt";
+    let text = match fs::read_to_string(file_path) {
+        Ok(text) => text,
+        Err(e) => {
+            panic!("Error reading file at {file_path}. Error {e}");
+        }
+    };
 
-    let action: ActionRectangleSelection =
-        match ActionRectangleSelection::from_str("turn on 3,5 through 9,9") {
+    //Read input char by char
+    for line in text.lines() {
+        let action: ActionRectangleSelection = match ActionRectangleSelection::from_str(line) {
             Ok(action) => action,
             Err(e) => {
                 eprintln!("{e}");
                 return;
             }
         };
-    println!("{action:?}");
-    map.apply(action);
+        map.apply(action);
+    }
+
+    // println!("{action:?}");
+
     println!("COUNT: {}", map.num_lights());
-    println!("{map}");
+    // println!("{map}");
 }
