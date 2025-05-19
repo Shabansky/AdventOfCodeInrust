@@ -17,18 +17,31 @@ enum LightState {
     Lit,
     Unlit,
 }
+
+trait Light {
+    fn turn_on(&mut self);
+    fn turn_off(&mut self);
+    fn toggle(&mut self);
+}
+
 #[derive(Clone, Debug)]
-struct Light {
+struct LightBinary {
     state: LightState,
 }
 
-impl Light {
+impl LightBinary {
     fn new() -> Self {
-        Light {
+        Self {
             state: LightState::Unlit,
         }
     }
 
+    fn is_on(&self) -> bool {
+        self.state == LightState::Lit
+    }
+}
+
+impl Light for LightBinary {
     fn turn_on(&mut self) {
         self.state = LightState::Lit;
     }
@@ -44,26 +57,31 @@ impl Light {
             self.state = LightState::Unlit;
         }
     }
-
-    fn is_on(&self) -> bool {
-        self.state == LightState::Lit
-    }
 }
 
-impl Default for Light {
+impl Default for LightBinary {
     fn default() -> Self {
         Self::new()
     }
 }
+struct LightAmplifying {
+    state: u32,
+}
+
+impl LightAmplifying {
+    fn new() -> Self {
+        Self { state: 0 }
+    }
+}
 
 struct SquareMap {
-    fields: Vec<Vec<Light>>,
+    fields: Vec<Vec<LightBinary>>,
 }
 
 impl SquareMap {
     fn new(side: usize) -> Self {
         Self {
-            fields: vec![vec![Light::default(); side]; side],
+            fields: vec![vec![LightBinary::default(); side]; side],
         }
     }
 
@@ -100,7 +118,7 @@ impl Display for SquareMap {
     }
 }
 
-impl Display for Light {
+impl Display for LightBinary {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.state {
             LightState::Lit => write!(f, "1"),
