@@ -74,6 +74,20 @@ impl LightAmplifying {
     }
 }
 
+impl Light for LightAmplifying {
+    fn turn_on(&mut self) {
+        self.state += 1;
+    }
+    fn turn_off(&mut self) {
+        if self.state > 0 {
+            self.state -= 1;
+        }
+    }
+    fn toggle(&mut self) {
+        self.state += 2;
+    }
+}
+
 struct SquareMap {
     fields: Vec<Vec<LightBinary>>,
 }
