@@ -22,6 +22,7 @@ trait Light {
     fn turn_on(&mut self);
     fn turn_off(&mut self);
     fn toggle(&mut self);
+    fn get_value(&self) -> usize;
 }
 
 #[derive(Clone, Debug)]
@@ -57,6 +58,14 @@ impl Light for LightBinary {
             self.state = LightState::Unlit;
         }
     }
+
+    fn get_value(&self) -> usize {
+        if self.state == LightState::Lit {
+            1
+        } else {
+            0
+        }
+    }
 }
 
 impl Default for LightBinary {
@@ -65,7 +74,7 @@ impl Default for LightBinary {
     }
 }
 struct LightAmplifying {
-    state: u32,
+    state: usize,
 }
 
 impl LightAmplifying {
@@ -78,24 +87,30 @@ impl Light for LightAmplifying {
     fn turn_on(&mut self) {
         self.state += 1;
     }
+
     fn turn_off(&mut self) {
         if self.state > 0 {
             self.state -= 1;
         }
     }
+
     fn toggle(&mut self) {
         self.state += 2;
     }
+
+    fn get_value(&self) -> usize {
+        self.state
+    }
 }
 
-struct SquareMap {
-    fields: Vec<Vec<LightBinary>>,
+struct SquareMap<T> {
+    fields: Vec<Vec<T>>,
 }
 
-impl SquareMap {
+impl<T: Light + Clone + Default> SquareMap<T> {
     fn new(side: usize) -> Self {
         Self {
-            fields: vec![vec![LightBinary::default(); side]; side],
+            fields: vec![vec![T::default(); side]; side],
         }
     }
 
@@ -115,12 +130,12 @@ impl SquareMap {
         self.fields
             .iter()
             .flatten()
-            .filter(|light| light.is_on())
-            .count()
+            .map(|light| light.get_value())
+            .sum()
     }
 }
 
-impl Display for SquareMap {
+impl<T: Display> Display for SquareMap<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for row in &self.fields {
             for light in row {
@@ -251,7 +266,7 @@ impl FromStr for ActionRectangleSelection {
 }
 
 fn main() {
-    let mut map = SquareMap::new(SQUARE_SIDE);
+    let mut map: SquareMap<LightBinary> = SquareMap::new(SQUARE_SIDE);
 
     let file_path = "input.txt";
     let text = match fs::read_to_string(file_path) {
