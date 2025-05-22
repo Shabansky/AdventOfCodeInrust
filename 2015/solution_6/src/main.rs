@@ -73,6 +73,7 @@ impl Default for LightBinary {
         Self::new()
     }
 }
+#[derive(Clone, Debug, Default)]
 struct LightAmplifying {
     state: usize,
 }
@@ -266,7 +267,7 @@ impl FromStr for ActionRectangleSelection {
 }
 
 fn main() {
-    let mut map: SquareMap<LightBinary> = SquareMap::new(SQUARE_SIDE);
+    let mut map: SquareMap<LightAmplifying> = SquareMap::new(SQUARE_SIDE);
 
     let file_path = "input.txt";
     let text = match fs::read_to_string(file_path) {
