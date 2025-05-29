@@ -11,16 +11,17 @@ impl Node {
 }
 
 type NodePair = (Node, Node);
+type WireId = String;
 
 struct Wire {
-    id: String,
+    id: WireId,
     signal: Signal,
     input: Node,
     output: Vec<Node>,
 }
 
 impl Wire {
-    fn new(id: String) -> Self {
+    fn new(id: WireId) -> Self {
         Self {
             id,
             signal: 0,
@@ -59,6 +60,7 @@ struct GateNot {
 
 mod circuit {
     use super::Wire;
+    use super::WireId;
     use std::collections::HashMap;
 
     #[derive(PartialEq, Debug)]
@@ -84,6 +86,10 @@ mod circuit {
                 self.wire_register.insert(wire_id, wire);
                 Ok(())
             }
+        }
+
+        fn get_wire(&self, id: WireId) -> Option<&Wire> {
+            self.wire_register.get(&id)
         }
     }
 
