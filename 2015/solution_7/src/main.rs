@@ -14,16 +14,14 @@ type NodePair = (Node, Node);
 type WireId = String;
 
 struct Wire {
-    id: WireId,
     signal: Signal,
     input: Node,
     output: Vec<Node>,
 }
 
 impl Wire {
-    fn new(id: WireId) -> Self {
+    fn new() -> Self {
         Self {
-            id,
             signal: 0,
             input: Node::new(0),
             output: vec![],
@@ -63,10 +61,6 @@ mod circuit {
     use super::WireId;
     use std::collections::HashMap;
 
-    #[derive(PartialEq, Debug)]
-    enum RegisterError {
-        WireAlreadyExists,
-    }
     struct CircuitBuilder {
         wire_register: HashMap<String, Wire>,
     }
@@ -78,18 +72,8 @@ mod circuit {
             }
         }
 
-        fn add_wire_to_register(&mut self, wire: Wire) -> Result<(), RegisterError> {
-            let wire_id = wire.id.clone();
-            if let Some(_) = self.wire_register.get(&wire_id) {
-                Err(RegisterError::WireAlreadyExists)
-            } else {
-                self.wire_register.insert(wire_id, wire);
-                Ok(())
-            }
-        }
-
-        fn get_wire(&self, id: WireId) -> Option<&Wire> {
-            self.wire_register.get(&id)
+        fn get_wire(&mut self, id: WireId) -> &mut Wire {
+            self.wire_register.entry(id).or_insert(Wire::new())
         }
     }
 
@@ -101,18 +85,17 @@ mod circuit {
             let mut builder = CircuitBuilder::new();
 
             assert_eq!(0, builder.wire_register.len());
-            let _ = builder.add_wire_to_register(Wire::new("ab".to_string()));
+            let _ = builder.get_wire("ab".to_string());
             assert_eq!(1, builder.wire_register.len());
         }
 
         #[test]
-        fn duplicate_wire_register_produces_error() {
+        fn multiple_get_wire_does_not_create_different_wires() {
             let mut builder = CircuitBuilder::new();
 
-            let _ = builder.add_wire_to_register(Wire::new("ab".to_string()));
-
-            let error = builder.add_wire_to_register(Wire::new("ab".to_string()));
-            assert_eq!(RegisterError::WireAlreadyExists, error.unwrap_err());
+            let wire = builder.get_wire("ab".to_string());
+            wire.signal = 20;
+            assert_eq!(20, builder.get_wire("ab".to_string()).signal);
         }
     }
 }
@@ -127,9 +110,8 @@ mod tests {
 
     #[test]
     fn new_wire_has_default_property_values() {
-        let wire = Wire::new("id".to_string());
+        let wire = Wire::new();
 
-        assert_eq!("id".to_string(), wire.id);
         assert_eq!(0, wire.signal);
         assert_eq!(0, wire.input.signal);
         assert_eq!(0, wire.output.len());
