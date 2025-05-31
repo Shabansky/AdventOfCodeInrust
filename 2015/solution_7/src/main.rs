@@ -13,18 +13,67 @@ impl Node {
 type NodePair = (Node, Node);
 type WireId = String;
 
-struct Wire {
-    signal: Signal,
-    input: Node,
-    output: Vec<Node>,
-}
+mod wire {
+    use super::Node;
+    use super::Signal;
+    pub enum WireError {
+        SignalAlreadySet,
+    }
 
-impl Wire {
-    fn new() -> Self {
-        Self {
-            signal: 0,
-            input: Node::new(0),
-            output: vec![],
+    pub struct Wire {
+        signal: Signal,
+        input: Node,
+        output: Vec<Node>,
+    }
+
+    impl Wire {
+        pub fn new() -> Self {
+            Self {
+                signal: 0,
+                input: Node::new(0),
+                output: vec![],
+            }
+        }
+
+        pub fn set_signal(&mut self, signal: Signal) -> Result<(), WireError> {
+            if self.signal != 0 {
+                return Err(WireError::SignalAlreadySet);
+            }
+
+            self.signal = signal;
+            Ok(())
+        }
+
+        pub fn get_signal(&self) -> Signal {
+            self.signal
+        }
+
+        pub fn get_input(&self) -> &Node {
+            &self.input
+        }
+
+        pub fn get_output(&self) -> &Vec<Node> {
+            &self.output
+        }
+    }
+
+    #[cfg(test)]
+    mod test {
+        use super::*;
+
+        #[test]
+        fn get_signal_as_reference() {
+            let mut wire = Wire::new();
+            wire.set_signal(42);
+            assert_eq!(42, wire.get_signal());
+            assert_eq!(42, wire.get_signal());
+        }
+
+        #[test]
+        fn signal_cannot_be_overwritten() {
+            let mut wire = Wire::new();
+            assert!(wire.set_signal(42).is_ok());
+            assert!(wire.set_signal(69).is_err());
         }
     }
 }
@@ -57,7 +106,7 @@ struct GateNot {
 }
 
 mod circuit {
-    use super::Wire;
+    use super::wire::Wire;
     use super::WireId;
     use std::collections::HashMap;
 
@@ -94,8 +143,8 @@ mod circuit {
             let mut builder = CircuitBuilder::new();
 
             let wire = builder.get_wire("ab".to_string());
-            wire.signal = 20;
-            assert_eq!(20, builder.get_wire("ab".to_string()).signal);
+            wire.set_signal(20);
+            assert_eq!(20, builder.get_wire("ab".to_string()).get_signal());
         }
     }
 }
@@ -106,14 +155,15 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+    use super::wire::Wire;
     use super::*;
 
     #[test]
     fn new_wire_has_default_property_values() {
         let wire = Wire::new();
 
-        assert_eq!(0, wire.signal);
-        assert_eq!(0, wire.input.signal);
-        assert_eq!(0, wire.output.len());
+        assert_eq!(0, wire.get_signal());
+        assert_eq!(0, wire.get_input().signal);
+        assert_eq!(0, wire.get_output().len());
     }
 }
