@@ -106,7 +106,9 @@ struct GateNot {
 }
 
 mod circuit {
-    use super::wire::Wire;
+    use crate::Signal;
+
+    use super::wire::{Wire, WireError};
     use super::WireId;
     use std::collections::HashMap;
 
@@ -123,6 +125,13 @@ mod circuit {
 
         fn get_wire(&mut self, id: WireId) -> &mut Wire {
             self.wire_register.entry(id).or_insert(Wire::new())
+        }
+
+        //Corresponds to lines of the type 123 -> a
+        fn build_source(&mut self, signal: Signal, id: WireId) -> Result<&mut Wire, WireError> {
+            let wire = self.get_wire(id);
+            wire.set_signal(signal)?;
+            Ok(wire)
         }
     }
 
