@@ -1,11 +1,17 @@
 type Signal = u16;
 
+#[derive(PartialEq, Debug)]
+enum SignalState {
+    Signal(Signal),
+    NoSignal,
+}
+
 struct Node {
-    signal: Signal,
+    signal: SignalState,
 }
 
 impl Node {
-    fn new(signal: Signal) -> Self {
+    fn new(signal: SignalState) -> Self {
         Self { signal }
     }
 }
@@ -15,13 +21,13 @@ type WireId = String;
 
 mod wire {
     use super::Node;
-    use super::Signal;
+    use super::{Signal, SignalState};
     pub enum WireError {
         SignalAlreadySet,
     }
 
     pub struct Wire {
-        signal: Signal,
+        signal: SignalState,
         input: Node,
         output: Vec<Node>,
     }
@@ -29,23 +35,24 @@ mod wire {
     impl Wire {
         pub fn new() -> Self {
             Self {
-                signal: 0,
-                input: Node::new(0),
+                signal: SignalState::NoSignal,
+                input: Node::new(SignalState::NoSignal),
                 output: vec![],
             }
         }
 
         pub fn set_signal(&mut self, signal: Signal) -> Result<(), WireError> {
-            if self.signal != 0 {
-                return Err(WireError::SignalAlreadySet);
+            match self.signal {
+                SignalState::Signal(_) => {
+                    return Err(WireError::SignalAlreadySet);
+                }
+                SignalState::NoSignal => self.signal = SignalState::Signal(signal),
             }
-
-            self.signal = signal;
             Ok(())
         }
 
-        pub fn get_signal(&self) -> Signal {
-            self.signal
+        pub fn get_signal(&self) -> &SignalState {
+            &self.signal
         }
 
         pub fn get_input(&self) -> &Node {
@@ -62,11 +69,21 @@ mod wire {
         use super::*;
 
         #[test]
+        fn new_wire_has_default_property_values() {
+            let wire = Wire::new();
+
+            assert_eq!(&SignalState::NoSignal, wire.get_signal());
+            assert_eq!(SignalState::NoSignal, wire.get_input().signal);
+            assert_eq!(0, wire.get_output().len());
+        }
+
+        #[test]
         fn get_signal_as_reference() {
             let mut wire = Wire::new();
             wire.set_signal(42);
-            assert_eq!(42, wire.get_signal());
-            assert_eq!(42, wire.get_signal());
+            assert_eq!(&SignalState::Signal(42), wire.get_signal());
+
+            assert_eq!(&SignalState::Signal(42), wire.get_signal());
         }
 
         #[test]
@@ -106,7 +123,7 @@ struct GateNot {
 }
 
 mod circuit {
-    use crate::Signal;
+    use crate::{Signal, SignalState};
 
     use super::wire::{Wire, WireError};
     use super::WireId;
@@ -153,7 +170,10 @@ mod circuit {
 
             let wire = builder.get_wire("ab".to_string());
             wire.set_signal(20);
-            assert_eq!(20, builder.get_wire("ab".to_string()).get_signal());
+            assert_eq!(
+                &SignalState::Signal(20),
+                builder.get_wire("ab".to_string()).get_signal()
+            );
         }
     }
 }
@@ -166,13 +186,4 @@ fn main() {
 mod tests {
     use super::wire::Wire;
     use super::*;
-
-    #[test]
-    fn new_wire_has_default_property_values() {
-        let wire = Wire::new();
-
-        assert_eq!(0, wire.get_signal());
-        assert_eq!(0, wire.get_input().signal);
-        assert_eq!(0, wire.get_output().len());
-    }
 }
