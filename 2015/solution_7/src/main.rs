@@ -115,11 +115,32 @@ struct GateOr {
     output: Node,
 }
 
+enum RunError {
+    InputNoSignal,
+}
+
 #[allow(dead_code)]
 struct GateNot {
-    input: NodePair,
-    signal: Signal,
-    output: Node,
+    input: SignalState,
+    output: SignalState,
+}
+
+impl GateNot {
+    fn new() -> Self {
+        Self {
+            input: SignalState::NoSignal,
+            output: SignalState::NoSignal,
+        }
+    }
+
+    fn run(&mut self) -> Result<(), RunError> {
+        match self.input {
+            SignalState::NoSignal => {
+                return Err(RunError::InputNoSignal);
+            }
+            _ => Ok(()),
+        }
+    }
 }
 
 mod circuit {
