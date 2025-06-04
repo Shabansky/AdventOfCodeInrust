@@ -97,8 +97,26 @@ mod wire {
 
 #[allow(dead_code)]
 struct GateShift {
-    input: Node,
-    output: Node,
+    input: SignalState,
+    output: SignalState,
+}
+
+impl GateShift {
+    fn new() -> Self {
+        Self {
+            input: SignalState::NoSignal,
+            output: SignalState::NoSignal,
+        }
+    }
+
+    fn run(&mut self) -> Result<(), RunError> {
+        match self.input {
+            SignalState::NoSignal => {
+                return Err(RunError::InputNoSignal);
+            }
+            _ => Ok(()),
+        }
+    }
 }
 
 #[allow(dead_code)]
