@@ -220,9 +220,3 @@ mod circuit {
 fn main() {
     println!("Hello, world!");
 }
-
-#[cfg(test)]
-mod tests {
-    use super::wire::Wire;
-    use super::*;
-}
