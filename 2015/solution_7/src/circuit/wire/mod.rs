@@ -1,20 +1,21 @@
-use super::Node;
 use super::{Signal, SignalState};
+
+type WireId = String;
 pub enum WireError {
     SignalAlreadySet,
 }
 
 pub struct Wire {
     signal: SignalState,
-    input: Node,
-    output: Vec<Node>,
+    input: WireId,
+    output: Vec<WireId>,
 }
 
 impl Wire {
     pub fn new() -> Self {
         Self {
             signal: SignalState::NoSignal,
-            input: Node::new(SignalState::NoSignal),
+            input: String::new(),
             output: vec![],
         }
     }
@@ -33,11 +34,11 @@ impl Wire {
         &self.signal
     }
 
-    pub fn get_input(&self) -> &Node {
+    pub fn get_input(&self) -> &WireId {
         &self.input
     }
 
-    pub fn get_output(&self) -> &Vec<Node> {
+    pub fn get_output(&self) -> &Vec<WireId> {
         &self.output
     }
 }
@@ -51,7 +52,7 @@ mod test {
         let wire = Wire::new();
 
         assert_eq!(&SignalState::NoSignal, wire.get_signal());
-        assert_eq!(SignalState::NoSignal, wire.get_input().signal);
+        assert_eq!(&String::new(), wire.get_input());
         assert_eq!(0, wire.get_output().len());
     }
 
