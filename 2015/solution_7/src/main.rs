@@ -19,6 +19,8 @@ impl Node {
 type NodePair = (Node, Node);
 type WireId = String;
 
+mod circuit;
+
 #[allow(dead_code)]
 struct GateShift {
     input: SignalState,
