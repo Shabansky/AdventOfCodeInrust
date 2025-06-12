@@ -7,6 +7,35 @@ mod wire;
 use std::collections::HashMap;
 use wire::{Wire, WireError};
 
+enum CircuitComponent {
+    SignalWireSource {
+        id: WireId,
+        signal: Signal,
+    },
+    Wire {
+        id: WireId,
+    },
+    NotGate {
+        input: WireId,
+        output: WireId,
+    },
+    ShiftGate {
+        input: WireId,
+        shift: u32,
+        output: WireId,
+    },
+    OrGate {
+        input_1: WireId,
+        input_2: WireId,
+        output: WireId,
+    },
+    AndGate {
+        input_1: WireId,
+        input_2: WireId,
+        output: WireId,
+    },
+}
+
 struct CircuitBuilder {
     wire_register: HashMap<String, Wire>,
 }
@@ -27,10 +56,19 @@ impl CircuitBuilder {
         //TODO: id.clone()
         self.wire_register.entry(id.clone()).or_insert(Wire::new())
     }
+
     fn get_wire_simple(&self, id: &WireId) -> Option<&Wire> {
         self.wire_register.get(id)
     }
 
+    fn build_component(&mut self, component: CircuitComponent) {
+        match component {
+            CircuitComponent::SignalWireSource { id, signal } => {
+                self.build_source(signal, id);
+            }
+            _ => {}
+        }
+    }
     //Corresponds to lines of the type 123 -> a
     fn build_source(&mut self, signal: Signal, id: WireId) -> Result<&mut Wire, WireError> {
         let wire = self.get_wire(&id);
@@ -70,5 +108,18 @@ mod test {
             &SignalState::Signal(20),
             builder.get_wire(&"ab".to_string()).get_signal()
         );
+    }
+
+    #[test]
+    fn build_a_source() {
+        let mut builder = CircuitBuilder::new();
+
+        builder.build_component(CircuitComponent::SignalWireSource {
+            id: String::from("ab"),
+            signal: 1000,
+        });
+
+        let wire = builder.get_wire(&String::from("ab"));
+        assert_eq!(SignalState::Signal(1000), *wire.get_signal());
     }
 }
