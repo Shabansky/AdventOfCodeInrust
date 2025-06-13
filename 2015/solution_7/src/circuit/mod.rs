@@ -2,8 +2,9 @@ use crate::{Signal, SignalState};
 
 use super::WireId;
 
+mod gate_not;
 mod wire;
-
+use gate_not::GateNot;
 use std::collections::HashMap;
 use wire::{Wire, WireError};
 
@@ -80,10 +81,10 @@ impl CircuitBuilder {
         self.get_wire_or_create(&id);
     }
 
-    fn build_multiwire(&mut self, input_id: &WireId, output_id: &WireId) {
+    fn build_not_gate(&mut self, input_id: &WireId, output_id: &WireId) {
         self.get_wire_or_create(input_id);
         self.get_wire_or_create(output_id);
-        let gate = DummyCircuit {
+        let gate = GateNot {
             input: input_id.clone(),
             output: output_id.clone(),
         };
