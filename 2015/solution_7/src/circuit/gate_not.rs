@@ -1,16 +1,17 @@
-use crate::{SignalState, WireId};
+use super::wire::Wire;
+
 enum RunError {
     InputNoSignal,
 }
 
 #[allow(dead_code)]
-pub struct GateNot {
-    pub input: WireId,
-    pub output: WireId,
+pub struct GateNot<'a> {
+    pub input: &'a Wire,
+    pub output: &'a Wire,
 }
 
-impl GateNot {
-    pub fn new(input: WireId, output: WireId) -> Self {
+impl<'a> GateNot<'a> {
+    pub fn new(input: &'a Wire, output: &'a Wire) -> Self {
         Self { input, output }
     }
 

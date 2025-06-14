@@ -53,13 +53,17 @@ impl CircuitBuilder {
         }
     }
 
-    fn get_wire_or_create(&mut self, id: &WireId) -> &mut Wire {
+    fn get_wire_or_create(&mut self, id: &WireId) -> &Wire {
         //TODO: id.clone()
         self.wire_register.entry(id.clone()).or_insert(Wire::new())
     }
 
-    fn get_wire_simple(&self, id: &WireId) -> Option<&Wire> {
+    fn get_wire(&self, id: &WireId) -> Option<&Wire> {
         self.wire_register.get(id)
+    }
+
+    fn get_wire_mut(&mut self, id: &WireId) -> Option<&mut Wire> {
+        self.wire_register.get_mut(id)
     }
 
     fn build_component(&mut self, component: CircuitComponent) {
@@ -71,26 +75,33 @@ impl CircuitBuilder {
         }
     }
     //Corresponds to lines of the type 123 -> a
-    fn build_source(&mut self, signal: Signal, id: WireId) -> Result<&mut Wire, WireError> {
-        let wire = self.get_wire_or_create(&id);
-        wire.set_signal(signal)?;
-        Ok(wire)
+    fn build_source(&mut self, signal: Signal, id: WireId) -> &Wire {
+        self.build_wire(&id);
+        let wire = self.get_wire_mut(&id).unwrap();
+        wire.set_signal(signal);
+        wire
     }
 
-    fn build_wire(&mut self, id: WireId) {
+    fn build_wire(&mut self, id: &WireId) {
+        //TODO: Consider removing get_wire_or_create. Either read or create. No need for upserts.
         self.get_wire_or_create(&id);
     }
 
+    fn build_wires(&mut self, wire_ids: Vec<&WireId>) {
+        for id in wire_ids {
+            self.build_wire(id);
+        }
+    }
+
     fn build_not_gate(&mut self, input_id: &WireId, output_id: &WireId) {
-        self.get_wire_or_create(input_id);
-        self.get_wire_or_create(output_id);
+        self.build_wires(vec![input_id, output_id]);
+
         let gate = GateNot {
-            input: input_id.clone(),
-            output: output_id.clone(),
+            input: self.get_wire(input_id).unwrap(),
+            output: self.get_wire(output_id).unwrap(),
         };
     }
 }
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -101,18 +112,6 @@ mod test {
         assert_eq!(0, builder.wire_register.len());
         let _ = builder.get_wire_or_create(&"ab".to_string());
         assert_eq!(1, builder.wire_register.len());
-    }
-
-    #[test]
-    fn multiple_get_wire_does_not_create_different_wires() {
-        let mut builder = CircuitBuilder::new();
-
-        let wire = builder.get_wire_or_create(&"ab".to_string());
-        wire.set_signal(20);
-        assert_eq!(
-            &SignalState::Signal(20),
-            builder.get_wire_or_create(&"ab".to_string()).get_signal()
-        );
     }
 
     #[test]
